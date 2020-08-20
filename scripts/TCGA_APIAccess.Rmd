@@ -1,0 +1,178 @@
+---
+title: "Analysis of MK2 transcript levels in TCGA-LUAD (NSCLC) dataset"
+author: "Karthik Suresh"
+date: "May 15, 2019"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+library("SummarizedExperiment")
+library("dplyr")
+library("DT")
+library("TCGAbiolinks")
+library(survival)
+library(ggplot2)
+library(ggpubr)
+clinical <- GDCquery_clinic(project = "TCGA-LUAD", type = "clinical")
+expr <- read.csv("LUAD.MAPKAPK2Exp.csv")
+clinical <- left_join(clinical, expr, c("submitter_id"= "Patient"))
+library("tidyr")
+
+clinical$time <- mapply(function(x,y) if(is.na(x)) return(y) else return(x), clinical$days_to_death, clinical$days_to_last_follow_up) 
+clinical$age_at_diagnosis <- clinical$age_at_diagnosis/365
+clinical$race <- as.factor(clinical$race)
+clinical$smoking <- lapply(clinical$cigarettes_per_day, function(x) if(!is.na(x)) return(1) else return(0))
+clinical$tumor_stage <- as.factor(clinical$tumor_stage)
+clinical$vital_status <- as.factor(clinical$vital_status)
+clinical$status <- lapply(clinical$vital_status, function(x) if(x=="alive") return(0) else return(1))
+
+
+
+# combine clinical stage
+
+combineStage <- function(x) {
+if(!is.na(x))  {
+if(x=="Stage I" | x=="Stage IB" | x=="Stage IA") return("Early Stage")
+if(x=="Stage II" | x=="Stage IIA" | x=="Stage IIB") return("Early Stage")
+if(x=="Stage IIIA" | x=="Stage IIIB") return("Late Stage")
+if(x=="Stage IV") return("Late Stage")
+}
+  } 
+
+# combined histologic types 
+
+combinePath <- function(x) {
+ if(!is.na(x))  {
+   
+   if(x=="Adenocarcinoma, NOS") return("Adenocarcinoma")
+   if(x=="Mucinous adenocarcinoma")  return("Adenocarcinoma")
+   if(x=="Adenocarcinoma with mixed subtypes") return("Adenocarcinoma")
+   if(x=="Papillary adenocarcinoma") return("Adenocarcinoma")
+   else return("Non-Adenocarcinoma")
+   
+ }
+  
+}
+
+# combine sub-stages into 1,2,3
+clinical$ajcc_pathologic_stage_combined <- lapply(clinical$ajcc_pathologic_stage, combineStage)
+
+clinical$ajcc_pathologic_stage_combined <- as.factor(as.character(clinical$ajcc_pathologic_stage_combined))
+
+# combine histology types
+clinical$primary_diagnosis_combined <- lapply(clinical$primary_diagnosis, combinePath)
+clinical$primary_diagnosis_combined<- as.factor(unlist(clinical$primary_diagnosis_combined))
+
+clinical <- clinical[clinical$ajcc_pathologic_stage_combined!="NULL",]
+
+# plot MK2 differences for adenocarcinoma only
+ggplot(clinical[clinical$primary_diagnosis_combined=="Adenocarcinoma", ], aes(x=ajcc_pathologic_stage_combined, y=Expression, ))+geom_violin()+geom_point(position=position_jitter())+stat_compare_means()
+
+
+ggplot(clinical, aes(x=ajcc_pathologic_stage_combined, y=Expression, fill=primary_diagnosis_combined))+geom_boxplot()+geom_point(position=position_jitterdodge())
+
+# Anova and Tukey HSD
+NSCLC_MK2_aov<- aov(data=clinical, Expression~primary_diagnosis_combined + ajcc_pathologic_stage_combined+ajcc_pathologic_stage_combined*primary_diagnosis_combined)
+
+TukeyHSD(NSCLC_MK2_aov)
+```
+
+
+COX PH
+```{r}
+MK2_CoxPH <-data.frame(clinical$submitter_id, clinical$ajcc_pathologic_stage_combined, clinical$primary_diagnosis_combined, clinical$Expression, clinical$time, clinical$vital_status)
+
+# We already got rid of NULLs for ajcc_pathologic_stage. However, the factor levels still list 3 levels - early, late and NULL. To re-level, convert to character, re-convert to factor, and now only 2 levels. 
+MK2_CoxPH$clinical.ajcc_pathologic_stage_combined<-as.factor(as.character(MK2_CoxPH$clinical.ajcc_pathologic_stage_combined))
+
+MK2_CoxPH <- MK2_CoxPH[!is.na(MK2_CoxPH$clinical.Expression), ]
+
+# create censor variable for CoxPH
+MK2_CoxPH$censor <- lapply(MK2_CoxPH$clinical.vital_status, function(x) if(x=="Alive") return(0) else return(1))
+MK2_CoxPH$censor <- as.numeric(MK2_CoxPH$censor)
+
+# COX PH model
+MK2_coxph_model <- coxph(Surv(clinical.time, censor) ~ clinical.ajcc_pathologic_stage_combined+clinical.Expression+clinical.primary_diagnosis_combined, id=clinical.submitter_id, data=MK2_CoxPH)
+
+# examine MK2 expression values 
+
+hist(MK2_CoxPH$clinical.Expression)
+# PH assumption testing
+
+cox.zph(MK2_coxph_model)
+
+# residual examination for individual variables
+
+plot(resid(coxph(Surv(clinical.time, censor) ~ clinical.ajcc_pathologic_stage_combined, id=clinical.submitter_id, data=MK2_CoxPH)))
+
+plot(resid(coxph(Surv(clinical.time, censor) ~ clinical.primary_diagnosis_combined, id=clinical.submitter_id, data=MK2_CoxPH)))
+plot(resid(coxph(Surv(clinical.time, censor) ~ clinical.Expression, id=clinical.submitter_id, data=MK2_CoxPH)))
+
+
+# on a cursory look, things look ok
+
+summary(MK2_coxph_model)
+```
+
+
+
+Fancy ggstatplots graphics
+```{r}
+p<- ggstatsplot::ggbetweenstats(
+  data = clinical,
+  x = ajcc_pathologic_stage_combined,
+  y = Expression,
+  notch = TRUE, # show notched box plot
+  mean.plotting = TRUE, # whether mean for each group is to be displayed
+  pairwise.comparisons = TRUE, 
+  mean.ci = TRUE, # whether to display confidence interval for means
+  type = "parametric", # which type of test is to be run
+  k = 2, # number of decimal places for statistical results
+  outlier.tagging = FALSE, # whether outliers need to be tagged
+  xlab = "Tumor Stage", # label for the x-axis variable
+  ylab = "MAPKAPK2 mRNA transcript level", # label for the y-axis variable
+  #ggtheme = ggthemes::theme_fivethirtyeight(), # choosing a different theme
+  ggstatsplot.layer = FALSE, # turn off ggstatsplot theme layer
+  package = "ggsci", # package from which color palette is to be taken
+  palette = "default_jama", # choosing a different color palette
+  messages = FALSE
+)
+
+
+p2 <- ggstatsplot::gghistostats(
+  data = clinical, # dataframe from which variable is to be taken
+  x = Expression, # numeric variable whose distribution is of interest
+  title = "Distribution of MAPKAPK2 transcript levels in NSCLC", # title for the plot
+  centrality.para = "mean",
+binwidth = 100, # binwidth value (experiment)
+ messages = FALSE, # turn off the messages
+)
+
+p3 <- ggstatsplot::ggscatterstats(
+  data = clinical,
+  x = Expression,
+  y =pack_years_smoked,
+  xlab = "MK2 gene transcript level",
+  ylab = "Age at diagnosis",
+  title = "A random correlation graph",
+  messages = FALSE
+)
+
+
+```
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
