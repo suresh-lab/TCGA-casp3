@@ -1,0 +1,261 @@
+---
+title: "MK2 Validation Analysis"
+author: "Karthik SUresh"
+date: "9/30/2020"
+output: 
+  html_document:
+    theme: united
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+# Data Import and cleaning
+
+The data for these analyses came from cBioPortal. We downloaded the clinical data as tracks from the website along with mRNA data. The mRNA data was available in 2 forms: log-normalized to other genes, or non-scaled - i.e. log normalized RSEM expression that is not normalized to other genes. We chose to use the latter (although on comparison, the difference in actual values between the two forms of mRNA data was minimal, and did not significantly change our model results)
+
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(ggplot2)
+library(ggpubr)
+library(dplyr)
+library(survival)
+library(survminer)
+# This is MAPKAPK2 mRNA and survival data obtained from cBioBortal - Study: OncoSG, Nat Genetics 2020
+
+MK2_valid <- read.table("../rawdata/validation.dataset.MK2.Exp.tsv", sep="\t")
+
+# these are normalized across the genome. We want the non-scaled data
+MK2_valid_nn <- read.csv("../rawdata/MAPKAPK2_valid_mRNA_nonnorm.txt", sep="\t")
+MK2_valid <- MK2_valid[c(1:8,14),]
+MK2_valid_t <- transpose(MK2_valid)
+colnames(MK2_valid_t) <- MK2_valid_t[1,]
+MK2_valid_t <- MK2_valid_t[-c(1:2), ]
+MK2_valid_t <- left_join(MK2_valid_t, MK2_valid_nn, by=c("track_name"="Patient.ID"))
+
+# switch the expression over to the non-scaled version
+MK2_valid_t$MAPKAPK2 <- MK2_valid_t$MAPKAPK2..mRNA.Expression..log.RNA.Seq.V2.RSEM.
+
+MK2_valid_t$Stage.simp <- lapply(MK2_valid_t$Stage, function(x) if(x=="I" | x=="II") return("Early Stage") else return("Late Stage"))
+MK2_valid_t$Stage.simp <- as.factor(unlist(MK2_valid_t$Stage.simp))
+MK2_valid_t$MAPKAPK2 <- as.numeric(MK2_valid_t$MAPKAPK2)
+
+# MK2 expression levels
+ggplot(MK2_valid_t, aes(x=Stage.simp, y=MAPKAPK2))+geom_boxplot(outlier.shape = NA)+geom_point()+theme_bw()+stat_compare_means()
+ggplot(MK2_valid_t, aes(x=MAPKAPK2, fill=Stage.simp))+geom_density(adjust=1.5, alpha=0.5)
+hist(MK2_valid_t$MAPKAPK2)
+
+
+# new variables for cox ph analysis
+MK2_valid_t$censor <- lapply(MK2_valid_t$`Overall survival status`, function(x) if(x=="0:LIVING") return(0) else return(1))
+MK2_valid_t$time <-as.numeric(MK2_valid_t$`Overall survival months`)
+MK2_valid_t$censor <-as.numeric(unlist(MK2_valid_t$censor))
+MK2_valid_t$time <- as.numeric(MK2_valid_t$time)
+MK2_valid_t$Sex <- as.factor(MK2_valid_t$Sex)
+MK2_valid_t$Stage <- as.factor(MK2_valid_t$Stage)
+MK2_valid_t$Smoking <- as.factor(MK2_valid_t$`Smoking status`)
+MK2_valid_t$Age <- as.numeric(MK2_valid_t$Age)
+
+# R censoring variable
+# The problem is that there are very few events (deaths) at one year. So we can't R censor at 1 year like we did previously. So, we will try 2 years. 
+MK2_valid_t$censor_2yr <- mapply(function(dead,time) if(dead==1 & time <25) return(1) else if(dead==0 & time > 24) return(0) else if (dead==0 & time < 25) return(0) else if (dead==1 & time > 24) return(0),MK2_valid_t$censor, MK2_valid_t$time )
+MK2_valid_t$censor_2yr <- as.numeric(unlist(MK2_valid_t$censor_2yr))
+
+
+hist(MK2_valid_t$censor_2yr)
+
+
+```
+
+
+We will explore the data in 2 parts. In the first part - this is the part published in the paper - we really just look at the first two years (censoring at 2 years). This is in part to maintain symmetry with how we analyzed TCGA data. We also conducted a much more extensive analysis using the entire time period. The problem here is that MK2 expression (not unexpectedly) behaved in a time-varying fashion over this extended time period, and thus we used a variety of analyses to look at that relationship.
+
+# Part 1: Cox PH and Logistic Regression analysis with R censoring at 2 years
+
+This will be done in two forms - using MK2 as a continuous variable, and again using top 1/3 vs. bottom 2/3 MK2 levels. 
+
+## Cox PH with R censoring at 2 years, MK2 as a continuous variable
+```{r} 
+# MK2 survival analysis using R censoring at 1 year
+summary(coxph(Surv(time, censor_2yr) ~ MAPKAPK2, id=Sample.ID, data=MK2_valid_t))
+summary(coxph(Surv(time, censor_2yr) ~ MAPKAPK2+Sex, id=Sample.ID, data=MK2_valid_t))
+summary(coxph(Surv(time, censor_2yr) ~ MAPKAPK2+Sex+Stage.simp, id=Sample.ID, data=MK2_valid_t))
+summary(coxph(Surv(time, censor_2yr) ~ MAPKAPK2+Age+Sex+Smoking+Stage.simp, id=Sample.ID, data=MK2_valid_t))
+
+MK2_CoxPH_valid_RC <- coxph(Surv(time, censor_2yr) ~ MAPKAPK2+Age+Sex+Smoking+Stage.simp, id=Sample.ID, data=MK2_valid_t)
+
+ggplot(MK2_valid_t, aes(x=time, y=MAPKAPK2))+geom_point()+geom_smooth(method="lm")+theme_bw()+stat_cor()
+
+cox.zph(MK2_CoxPH_valid_RC)
+plot(cox.zph(MK2_CoxPH_valid_RC)[1])
+
+
+
+summary(MK2_CoxPH_valid_RC)
+```
+
+
+## Cox PH with R censoring at 2 years, MK2 as a "hi" vs. "low" (dichotomous) variable
+```{r}
+MK2_valid_t$MK2.topQ <- lapply(MK2_valid_t$MAPKAPK2, function(x) if(x > quantile(MK2_valid_t$MAPKAPK2,  0.66)) return(1) else return(0))
+MK2_valid_t$MK2.topQ <- as.numeric(unlist(MK2_valid_t$MK2.topQ))
+hist(MK2_valid_t$MK2.topQ)
+
+MK2_CoxPH_valid_RC_topQ <- coxph(Surv(time, censor_2yr) ~ MK2.topQ+Age+Sex+Smoking+Stage.simp, id=Sample.ID, data=MK2_valid_t)
+cox.zph(MK2_CoxPH_valid_RC_topQ)
+summary(MK2_CoxPH_valid_RC_topQ)
+```
+
+
+## Model graphics for the Cox PH model above - KM curves
+```{r}
+km_valid <- survfit(Surv(time, censor_2yr)~MK2.topQ, data=MK2_valid_t, type='kaplan-meier')
+ggsurvplot(km_valid, conf.int = TRUE, xlim=c(0,24), break.x.by=2,pval=TRUE, font.y=14,font.x=14,font.tickslab=14, ggtheme=theme_bw())
+ggsurvplot(km_valid, conf.int = TRUE,risk.table = TRUE, pval=TRUE, font.y=14,font.x=14,font.tickslab=14, ggtheme=theme_bw())
+
+```
+
+## Logistic regression for death at 2 year
+
+```{r}
+glm_valid_RC_topQ <-glm(censor_2yr ~ MK2.topQ+Age+Sex+Smoking+Stage.simp, data=MK2_valid_t, family=binomial(link="logit"))
+ResourceSelection::hoslem.test(glm_valid_RC_topQ$y, fitted(glm_valid_RC_topQ))
+summary(glm_valid_RC_topQ)
+exp(coefficients(glm_valid_RC_topQ))
+exp(confint(glm_valid_RC_topQ))
+
+
+
+```
+
+
+# Part 2: Cox PH analysis without R censoring
+Here, we're going to entertain the entire dataset, over the entire time period
+
+## Initial Modeling
+```{r}
+# MK2 survival analysis using no R censoring at 1 year
+summary(coxph(Surv(time, censor) ~ MAPKAPK2, id=Sample.ID, data=MK2_valid_t))
+summary(coxph(Surv(time, censor) ~ MAPKAPK2+Sex, id=Sample.ID, data=MK2_valid_t))
+summary(coxph(Surv(time, censor) ~ MAPKAPK2+Sex+Stage.simp, id=Sample.ID, data=MK2_valid_t))
+summary(coxph(Surv(time, censor) ~ MAPKAPK2+Age+Sex+Smoking+Stage.simp, id=Sample.ID, data=MK2_valid_t))
+
+MK2_CoxPH_valid <- coxph(Surv(time, censor) ~ MAPKAPK2+Age+Sex+Smoking+Stage.simp, id=Sample.ID, data=MK2_valid_t)
+
+ggplot(MK2_valid_t, aes(x=time, y=MAPKAPK2))+geom_point()+geom_smooth(method="lm")+theme_bw()+stat_cor()
+
+cox.zph(MK2_CoxPH_valid)
+
+# Hold up! There is an issue with the MAPKAPK2 variable.
+plot(cox.zph(MK2_CoxPH_valid)[1])
+
+# let's look at model fit with log transformed time 
+model_fit <- cox.zph(MK2_CoxPH_valid, transform=function(time) log(time))
+
+model_fit
+plot(model_fit[1])
+
+# there is a linear dependence of the MAPKAPK variable to log time. 
+```
+
+
+## Time-varying covariate handling - MAPKAPK2. Choosing the time transform function
+
+When MAPKAPK is modeled with trational form, then we have L(t) = L0(t)exp(Bx(t)). But for time varying, we let the coeffcient b relate to time via the form b(t) = a+b*log(t). Now, b*x = x*(a+b*log(t)) = ax + blog(t)*x. a in the ax term is the beta from the MAPKAPK2 covariate, blog(t) is the beta from the tt() transformed MAPKAPK2 variable. So, the explanatory function a+[blog(t)]x can be plotted against the residuals/logtime plot to assess fit. 
+
+
+```{r}
+# multivariate model with tv variable
+# here we fit the equation log(0.5*t+20) to model the relationship between MAPKAPK2 and time.
+
+MK2_CoxPH_valid_tv <- coxph(Surv(time, censor) ~ Age+Sex+Smoking+Stage.simp+MAPKAPK2+tt(MAPKAPK2), id=Sample.ID, tt=function(x,t,...) x*log(0.5*t+20), data=MK2_valid_t)
+plot(model_fit[1])+abline(coef(MK2_CoxPH_valid_tv)[5:6], col=2)
+summary(MK2_CoxPH_valid_tv)
+```
+
+So, this tells us that the effect of MAPKAPK2 on Survival is different by units of log time. 
+
+## Visualizing the effect of time and MAPKAPK2 levels on hazard. 
+
+```{r}
+library(visreg)
+library(casebase)
+tv_model_viz <- fitSmoothHazard( censor ~ Age+Sex+Smoking+Stage.simp+MAPKAPK2*log(0.5*time+20), data=MK2_valid_t, time="time")
+
+plot(tv_model_viz, hazard.params = list(xvar="time", by="MAPKAPK2", alpha=1,breaks=3,ylab="Hazard"))
+visreg2d(tv_model_viz, 
+         xvar = "time",
+         yvar = "MAPKAPK2",
+         trans = exp,
+         print.cond = TRUE,
+         zlab = "Hazard",
+         plot.type = "image")
+
+visreg2d(tv_model_viz, 
+         xvar = "time",
+         yvar = "MAPKAPK2",
+         trans = exp,
+         print.cond = TRUE,
+         zlab = "Hazard",
+         plot.type = "persp")
+
+```
+
+## Jackknifing the log(t) time transform function coefficients
+
+So, we just sort of picked the a and b values for the term log(a*t+b). Here we do some jackknifing to make sure that some flexibility in these values doesn't substantially change the outcomes of these models. 
+```{r}
+JackKnife_logt <- function(a,b){
+model <- coxph(Surv(time, censor) ~ Age+Sex+Smoking+Stage.simp+MAPKAPK2+tt(MAPKAPK2), id=Sample.ID, tt=function(x,t,...) x*log(a*t+b), data=MK2_valid_t2)
+return(coef(model)[6])
+}
+JackKnife_logt_lci <- function(a,b){
+model <- coxph(Surv(time, censor) ~ Age+Sex+Smoking+Stage.simp+MAPKAPK2+tt(MAPKAPK2), id=Sample.ID, tt=function(x,t,...) x*log(a*t+b), data=MK2_valid_t2)
+return(confint(model)[6])
+}
+JackKnife_logt_uci <- function(a,b){
+model <- coxph(Surv(time, censor) ~ Age+Sex+Smoking+Stage.simp+MAPKAPK2+tt(MAPKAPK2), id=Sample.ID, tt=function(x,t,...) x*log(a*t+b), data=MK2_valid_t2)
+return(confint(model)[12])
+}
+
+a_vals <- as.data.frame(seq(0.41,0.6,0.01))
+colnames(a_vals) <- c("a_vals")
+tv_jk <- a_vals
+tv_jk$b_vals <- seq(15.5,25,0.5)
+MK2_valid_t2 <<- MK2_valid_t
+tv_jk$coefficient <- mapply(JackKnife_logt, as.numeric(tv_jk$a_vals), 20)
+tv_jk$coefficient_lci <- mapply(JackKnife_logt_lci, as.numeric(tv_jk$a_vals),20) 
+tv_jk$coefficient_uci <- mapply(JackKnife_logt_uci, as.numeric(tv_jk$a_vals), 20) 
+
+
+ggplot(tv_jk, aes(x=a_vals, y=exp(coefficient), ymin=exp(coefficient_lci), ymax=exp(coefficient_uci)))+geom_point()+geom_pointrange()+theme_bw()+ylab("HR for time*MAPKAPK2 term")+xlab("value of a in log(a*t + b) when b is fixed at 20")
+
+
+tv_jk$coefficient_b <- mapply(JackKnife_logt,0.5, as.numeric(tv_jk$b_vals))
+tv_jk$coefficient_b_lci <- mapply(JackKnife_logt_lci, 0.5,as.numeric(tv_jk$b_vals)) 
+tv_jk$coefficient_b_uci <- mapply(JackKnife_logt_uci, 0.5, as.numeric(tv_jk$b_vals)) 
+
+ggplot(tv_jk, aes(x=b_vals, y=coefficient_b, ymin=coefficient_b_lci, ymax=coefficient_b_uci))+geom_point()+geom_pointrange()+theme_bw()+ylab("HR for time*MAPKAPK2 term")+xlab("Value of b in log(a*t+b) when a is fixed at 0.5")
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

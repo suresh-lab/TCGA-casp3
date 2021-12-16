@@ -1,0 +1,80 @@
+---
+title: "TCGA-Methylation Analysis"
+author: "Karthik SUresh"
+date: "8/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(TCGAbiolinks)
+library(GenomicRanges)
+library(SummarizedExperiment)
+library(ggplot2)
+clinical <- GDCquery_clinic(project = "TCGA-LUAD", type = "clinical")
+
+combineStage <- function(x) {
+if(!is.na(x))  {
+if(x=="Stage I" | x=="Stage IB" | x=="Stage IA") return("Early Stage")
+if(x=="Stage II" | x=="Stage IIA" | x=="Stage IIB") return("Early Stage")
+if(x=="Stage IIIA" | x=="Stage IIIB") return("Late Stage")
+if(x=="Stage IV") return("Late Stage")
+}
+  } 
+clinical$ajcc_pathologic_stage_combined <- lapply(clinical$ajcc_pathologic_stage, combineStage)
+clinical$ajcc_pathologic_stage_combined <- as.factor(as.character(clinical$ajcc_pathologic_stage_combined))
+
+luad.samples <- matchedMetExp("TCGA-LUAD", n=10)
+query <- GDCquery(project = c("TCGA-LUAD"),
+                  data.category = "DNA methylation",
+                  platform = "Illumina Human Methylation 450",
+                  legacy = TRUE, 
+                  barcode = luad.samples)
+GDCdownload(query, directory="C:/GDCdata" )
+met <- GDCprepare(query, save = FALSE, directory="C:/GDCdata")
+
+
+met <- subset(met,subset = as.character(seqnames(met)) %in% c("chr1"))
+
+met$tumor_stage.2 <- lapply(met$tumor_stage, function(x) if (x=="stage ia" | x=="stage ib" | x=="stage i") return("stage i") else return("stage ii"))
+met$tumor_stage.2 <- unlist(met$tumor_stage.2)
+
+met <- met[rowSums(is.na(assay(met))) == 0,]
+df <- data.frame(
+  "Sample.mean" = colMeans(assay(met), na.rm = TRUE),
+  "groups" = met$tumor_stage.2
+)
+ggplot(df, aes(y = Sample.mean,x = groups))+geom_boxplot()+geom_point()
+
+dmc <- TCGAanalyze_DMC(met,
+                       groupCol = "tumor_stage.2", # a column in the colData matrix
+                       group1 = "stage i", # a type of the disease type column
+                       group2 = "stage ii", # a type of the disease column
+                       p.cut = 0.05,
+                       diffmean.cut = 0.15,
+                       save = FALSE,
+                       legend = "State",
+                       plot.filename = "LGG_GBM_metvolcano.png",
+                       cores = 1 # if set to 1 there will be a progress bar
+)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -1,0 +1,131 @@
+---
+title: "TCGA Tumor Response Analysis-MK2"
+author: "Karthik Suresh"
+date: "2/25/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(TCGAbiolinks)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+
+rm(list=ls())
+query <- GDCquery(project = "TCGA-LUAD", 
+              data.category = "Clinical", 
+              file.type = "xml" )
+              
+GDCdownload(query)
+clinical_drug <- GDCprepare_clinic(query, clinical.info = "drug")
+expr <- read.csv("../rawdata/LUAD.MAPKAPK2Exp.csv", header=TRUE)
+colnames(expr) <- c("Patient", "MK2.Expression")
+clinical_drug <- left_join(clinical_drug, expr, c("bcr_patient_barcode"= "Patient"))
+
+
+clinical <- GDCquery_clinic(project = "TCGA-LUAD", type = "clinical")
+
+combineStage <- function(x) {
+if(!is.na(x))  {
+if(x=="Stage I" | x=="Stage IB" | x=="Stage IA") return("Early Stage")
+if(x=="Stage II" | x=="Stage IIA" | x=="Stage IIB") return("Early Stage")
+if(x=="Stage IIIA" | x=="Stage IIIB") return("Late Stage")
+if(x=="Stage IV") return("Late Stage")
+}
+  } 
+
+# combined histologic types 
+
+combinePath <- function(x) {
+ if(!is.na(x))  {
+   
+   if(x=="Adenocarcinoma, NOS") return("Adenocarcinoma")
+   if(x=="Mucinous adenocarcinoma")  return("Adenocarcinoma")
+   if(x=="Adenocarcinoma with mixed subtypes") return("Adenocarcinoma")
+   if(x=="Papillary adenocarcinoma") return("Adenocarcinoma")
+   else return("Non-Adenocarcinoma")
+   
+ }
+  
+}
+
+# combine sub-stages into 1,2,3
+clinical$ajcc_pathologic_stage_combined <- lapply(clinical$ajcc_pathologic_stage, combineStage)
+
+clinical$ajcc_pathologic_stage_combined <- as.factor(as.character(clinical$ajcc_pathologic_stage_combined))
+
+# combine histology types
+clinical$primary_diagnosis_combined <- lapply(clinical$primary_diagnosis, combinePath)
+
+# get rid of NULL entries
+clinical <- clinical[clinical$ajcc_pathologic_stage_combined!="NULL",]
+
+
+# We already got rid of NULLs for ajcc_pathologic_stage. However, the factor levels still list 3 levels - early, late and NULL. To re-level, convert to character, re-convert to factor, and now only 2 levels. 
+clinical$ajcc_pathologic_stage_combined<-as.factor(as.character(clinical$ajcc_pathologic_stage_combined))
+
+
+
+combineStage.Simp <- function(x) {
+if(!is.na(x))  {
+if(x=="Stage I" | x=="Stage IB" | x=="Stage IA") return("Stage 1")
+if(x=="Stage II" | x=="Stage IIA" | x=="Stage IIB") return("Stage 2")
+if(x=="Stage IIIA" | x=="Stage IIIB") return("Stage 3")
+if(x=="Stage IV") return("Stage 4")
+}
+  } 
+clinical$ajcc_pathologic_stage_combined.2 <- lapply(clinical$ajcc_pathologic_stage, combineStage.Simp)
+clinical$ajcc_pathologic_stage_combined.2 <- as.factor(unlist(clinical$ajcc_pathologic_stage_combined.2))
+
+clinical_full <- left_join(clinical, clinical_drug, by=c("submitter_id"="bcr_patient_barcode"))
+clinical_full <- clinical_full[!is.na(clinical_full$ajcc_pathologic_stage_combined),]
+
+
+clinical_full$measure_of_response_recoded <- lapply(clinical_full$measure_of_response, function(x) if(is.na(x))  return("") else if(x=="Partial Response" | x=="Stable Disease" | x=="Complete Response") return("Response") else if(x=="") return("") else return("Progressive Disease"))
+
+clinical_full_2 <- distinct(clinical_full, MK2.Expression, .keep_all = TRUE) 
+
+
+
+clinical_full_2$measure_of_response_recoded <- as.factor(unlist(clinical_full_2$measure_of_response_recoded))
+ggplot(clinical_full_2[clinical_full_2$measure_of_response_recoded!="", ], aes(x=measure_of_response_recoded, y=log(MK2.Expression), fill=ajcc_pathologic_stage_combined, ))+geom_boxplot(outlier.size=0)+geom_point(position = position_jitterdodge())+theme_bw()
+
+
+aov_mk2 <- aov(data=clinical_full_2[clinical_full_2$measure_of_response_recoded!="", ], MK2.Expression~measure_of_response_recoded+ajcc_pathologic_stage_combined+measure_of_response_recoded*ajcc_pathologic_stage_combined)
+
+bottom_quant <<- 0.33
+top_quant <<- 0.66
+clinical <- left_join(clinical, expr, c("submitter_id"= "Patient"))
+clinical <- clinical[!is.na(clinical$MK2.Expression),]
+clinical$MK2_Expression_hi <- lapply(clinical$MK2.Expression, function (x) if(x > quantile(clinical$MK2.Expression, top_quant))  return(1) else return(0))
+
+clinical$MK2_Expression_hi <- as.factor(unlist(clinical$MK2_Expression_hi))
+levels(clinical$MK2_Expression_hi) <- c("Low", "High")
+CaseDistr <- aggregate(submitter_id ~ MK2_Expression_hi+ajcc_pathologic_stage_combined.2, FUN=length, data=clinical)
+
+ggplot(CaseDistr, aes(x=ajcc_pathologic_stage_combined.2, y=submitter_id, fill=MK2_Expression_hi))+geom_bar(stat="identity", position="dodge")+theme_bw()
+
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

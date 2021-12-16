@@ -1,0 +1,76 @@
+---
+title: "Bootstrapped HRs for a large number of LUAD genes"
+author: "Karthik Suresh"
+date: "December 2021"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+library("SummarizedExperiment")
+library("dplyr")
+library("DT")
+library("TCGAbiolinks")
+library(survival)
+library(ggplot2)
+library(ggpubr)
+clinical <- GDCquery_clinic(project = "TCGA-LUAD", type = "clinical")
+
+clinical$time <- mapply(function(x,y) if(is.na(x)) return(y) else return(x), clinical$days_to_death, clinical$days_to_last_follow_up) 
+clinical$age_at_diagnosis <- clinical$age_at_diagnosis/365
+clinical$race <- as.factor(clinical$race)
+clinical$smoking <- lapply(clinical$cigarettes_per_day, function(x) if(!is.na(x)) return(1) else return(0))
+clinical$tumor_stage <- as.factor(clinical$tumor_stage)
+clinical$vital_status <- as.factor(clinical$vital_status)
+clinical$status <- lapply(clinical$vital_status, function(x) if(x=="alive") return(0) else return(1))
+
+
+
+# combine clinical stage
+
+combineStage <- function(x) {
+if(!is.na(x))  {
+if(x=="Stage I" | x=="Stage IB" | x=="Stage IA") return("Early Stage")
+if(x=="Stage II" | x=="Stage IIA" | x=="Stage IIB") return("Early Stage")
+if(x=="Stage IIIA" | x=="Stage IIIB") return("Late Stage")
+if(x=="Stage IV") return("Late Stage")
+}
+  } 
+
+# combined histologic types 
+
+combinePath <- function(x) {
+ if(!is.na(x))  {
+   
+   if(x=="Adenocarcinoma, NOS") return("Adenocarcinoma")
+   if(x=="Mucinous adenocarcinoma")  return("Adenocarcinoma")
+   if(x=="Adenocarcinoma with mixed subtypes") return("Adenocarcinoma")
+   if(x=="Papillary adenocarcinoma") return("Adenocarcinoma")
+   else return("Non-Adenocarcinoma")
+   
+ }
+  
+}
+
+# combine sub-stages into 1,2,3
+clinical$ajcc_pathologic_stage_combined <- lapply(clinical$ajcc_pathologic_stage, combineStage)
+
+clinical$ajcc_pathologic_stage_combined <- as.factor(as.character(clinical$ajcc_pathologic_stage_combined))
+
+# combine histology types
+clinical$primary_diagnosis_combined <- lapply(clinical$primary_diagnosis, combinePath)
+clinical$primary_diagnosis_combined<- as.factor(unlist(clinical$primary_diagnosis_combined))
+
+clinical <- clinical[clinical$ajcc_pathologic_stage_combined!="NULL",]
+
+
+# obtain transcripts
+query <- GDCquery(project="TCGA-LUAD", data.category="Gene expression", data.type="Gene expression quantification", platform="Illumina HiSeq", file.type="results", legacy=TRUE)
+
+GDCdownload(query)
+
+luad.exp <- GDCprepare(query=query, save=TRUE, summarizedExperiment = TRUE, save.filename="LUADIllumina_HiSeq.rda")
+```
+
+
