@@ -2,10 +2,16 @@
 
 Code and raw data for the genomic analyses for our pre-print found here: https://www.biorxiv.org/content/10.1101/2021.11.30.470656v1
 
-This is the master branch which contains the original set of analysis, including the main analysis examining the effect of MK2 on survival in both NSCLC and other cancers. 
+This is the master branch which contains the original set of analysis, including the main analysis examining the effect of MK2 on survival in both NSCLC and other cancers. A description of the sub-folders in the main branch is provided below.
 
-The "Revision 5" branch contains more extensive data, including: a) raw data (as rda or txt files) for the pan cancer analyses; b) additional pan cancer ananalyses performed during revisions of the original manuscript prior to publication; c) compressed count matrices for the various cancer types considered in our pan cancer analysis; d) count matrices and additional raw data used for the normal vs. tumor comparisons. That branch is stored in LFS format given the size of the repository, and will require lfs installation to git so that the files can be decompressed upon repo pull. 
-General Notes:
+The "Revision 5" branch contains more extensive data, including: 
+- raw data (as rda or *_RSEM.txt files) for the pan cancer analyses
+- additional pan cancer analyses (normal vs. tumor MK2 levels, gene signatures) requested and performed during revisions of the original manuscript prior to publication. 
+- compressed count matrices for the various cancer types considered in our pan cancer analysis 
+
+The 'Revision 5' branch is stored in LFS format given the size of the repository, and will require lfs installation to git so that the files can be decompressed upon repo pull. Please see https://github.com/git-lfs/git-lfs/blob/main/docs/man/git-lfs-migrate.1.ronn for additional documentation on this process. 
+
+General Notes re: the data contained in the master branch
 
 scripts/
 - main Cox PH and survival analyses, and pdfs of supplemental data
@@ -27,7 +33,7 @@ TCGA-MK2_bootstrappedHR/
 TCGA-MK2_panca/
 - This was fun to write! So here, we go and get clinical data from a bunch of cancers(!).
 - ./rawdata/MasterMK2data.csv contains the concatenated clinical data for a variety of tumor types
-- ./scripts/PanCA_survival.analysis and annotation markdowns contain the code used to generate HRs for MK2  across cancer types
-- So, the crux of the work is done by the PanCA_survival.analysis markdown returnModel() function
+- ./scripts/PanCA_survival.analysis and annotation markdowns contain the code used to generate HRs for MK2 across cancer types
+- The crux of the work is done by the PanCA_survival.analysis markdown returnModel() function
 - We feed portions of the large concatenated dataset (one cancer at a time) to a function that calculates a Cox PH model on that subsetted data and returns the model results as a data structure, including metrics. We then extract from that list of lists the HR, CIs
 - PanCA_survival.analysis rev2 contains HR (with CIs) but also the model metrics. 
