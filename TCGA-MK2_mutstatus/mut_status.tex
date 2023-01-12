@@ -1,0 +1,1070 @@
+\documentclass{article}\usepackage[]{graphicx}\usepackage[]{color}
+% maxwidth is the original width if it is less than linewidth
+% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage[sc]{mathpazo}
+\renewcommand{\sfdefault}{lmss}
+\renewcommand{\ttdefault}{lmtt}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage[unicode=true,pdfusetitle,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=2,
+ breaklinks=false,pdfborder={0 0 1},backref=false,colorlinks=false]
+ {hyperref}
+\hypersetup{
+ pdfstartview={XYZ null null 1}}
+
+\makeatletter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\topfraction}{0.8}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\floatpagefraction}{0.75}
+
+\makeatother
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+
+
+
+
+
+
+
+
+The results below are generated from an R script.
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{library}\hlstd{(ggplot2)}
+\hlkwd{library}\hlstd{(data.table)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# data.table 1.13.6 using 6 threads (see ?getDTthreads).\ \ Latest news: r-datatable.com}}\begin{alltt}
+\hlkwd{library}\hlstd{(dplyr)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# \\\#\# Attaching package: 'dplyr'}}
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# The following objects are masked from 'package:data.table':\\\#\# \\\#\#\ \ \ \  between, first, last}}
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# The following objects are masked from 'package:stats':\\\#\# \\\#\#\ \ \ \  filter, lag}}
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# The following objects are masked from 'package:base':\\\#\# \\\#\#\ \ \ \  intersect, setdiff, setequal, union}}\begin{alltt}
+\hlkwd{library}\hlstd{(survival)}
+\hlkwd{rm}\hlstd{(}\hlkwc{list}\hlstd{=}\hlkwd{ls}\hlstd{())}
+\hlstd{mut_status_EA} \hlkwb{<-} \hlkwd{read.table} \hlstd{(}\hlstr{"../rawdata/mut_status_EAcohort.tsv"}\hlstd{,} \hlkwc{sep}\hlstd{=}\hlstr{"\textbackslash{}t"}\hlstd{)}
+\hlstd{mut_status_TCGA} \hlkwb{<-} \hlkwd{read.table} \hlstd{(}\hlstr{"../rawdata/mut_status_TCGA.tsv"}\hlstd{,} \hlkwc{sep}\hlstd{=}\hlstr{"\textbackslash{}t"}\hlstd{)}
+\hlstd{mut_status_EA} \hlkwb{<-} \hlstd{mut_status_EA[}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{8}\hlopt{:}\hlnum{10}\hlstd{),]}
+\hlstd{mut_status_TCGA} \hlkwb{<-} \hlstd{mut_status_TCGA[}\hlkwd{c}\hlstd{(}\hlnum{1}\hlstd{,}\hlnum{6}\hlopt{:}\hlnum{8}\hlstd{),]}
+
+
+\hlstd{mut_status_EA} \hlkwb{<-} \hlkwd{transpose}\hlstd{(mut_status_EA)}
+\hlstd{mut_status_TCGA} \hlkwb{<-} \hlkwd{transpose}\hlstd{(mut_status_TCGA)}
+
+
+\hlkwd{colnames}\hlstd{(mut_status_EA)} \hlkwb{<-} \hlstd{mut_status_EA[}\hlnum{1}\hlstd{,]}
+\hlkwd{colnames}\hlstd{(mut_status_TCGA)} \hlkwb{<-} \hlstd{mut_status_TCGA[}\hlnum{1}\hlstd{,]}
+
+\hlstd{mut_status_EA} \hlkwb{<-} \hlstd{mut_status_EA[}\hlopt{-}\hlkwd{c}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{2}\hlstd{), ]}
+\hlstd{mut_status_TCGA} \hlkwb{<-} \hlstd{mut_status_TCGA[}\hlopt{-}\hlkwd{c}\hlstd{(}\hlnum{1}\hlopt{:}\hlnum{2}\hlstd{), ]}
+
+
+\hlstd{SimplifyMutStatus} \hlkwb{<-} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{) \{}
+
+  \hlkwa{if}\hlstd{(x}\hlopt{==}\hlstr{""}\hlstd{)} \hlkwd{return}\hlstd{(}\hlstr{"Wild-Type"}\hlstd{)}
+  \hlkwa{else} \hlkwd{return}\hlstd{(}\hlstr{"Mutant"}\hlstd{)}
+\hlstd{\}}
+
+
+\hlstd{mut_status_EA}\hlopt{$}\hlstd{EGFR.simp} \hlkwb{<-} \hlkwd{sapply}\hlstd{(mut_status_EA}\hlopt{$}\hlstd{EGFR, SimplifyMutStatus)}
+\hlstd{mut_status_EA}\hlopt{$}\hlstd{KRAS.simp} \hlkwb{<-} \hlkwd{sapply}\hlstd{(mut_status_EA}\hlopt{$}\hlstd{KRAS, SimplifyMutStatus)}
+\hlstd{mut_status_EA}\hlopt{$}\hlstd{TP53.simp} \hlkwb{<-} \hlkwd{sapply}\hlstd{(mut_status_EA}\hlopt{$}\hlstd{TP53, SimplifyMutStatus)}
+
+\hlstd{mut_status_TCGA}\hlopt{$}\hlstd{EGFR.simp} \hlkwb{<-} \hlkwd{sapply}\hlstd{(mut_status_TCGA}\hlopt{$}\hlstd{EGFR, SimplifyMutStatus)}
+\hlstd{mut_status_TCGA}\hlopt{$}\hlstd{KRAS.simp} \hlkwb{<-} \hlkwd{sapply}\hlstd{(mut_status_TCGA}\hlopt{$}\hlstd{KRAS, SimplifyMutStatus)}
+\hlstd{mut_status_TCGA}\hlopt{$}\hlstd{TP53.simp} \hlkwb{<-} \hlkwd{sapply}\hlstd{(mut_status_TCGA}\hlopt{$}\hlstd{TP53, SimplifyMutStatus)}
+
+
+\hlcom{# EA Cohort Work}
+
+\hlcom{# pull in mRNA levels from validation dataset}
+
+\hlstd{EA_cohort_clindata} \hlkwb{<-} \hlkwd{read.table}\hlstd{(}\hlstr{"../rawdata/validation-dataset-clinical.processed.csv"}\hlstd{,} \hlkwc{sep}\hlstd{=}\hlstr{";"}\hlstd{,} \hlkwc{header}\hlstd{=}\hlnum{TRUE}\hlstd{)}
+\hlstd{EA_mutstatus_merged} \hlkwb{<-} \hlkwd{left_join}\hlstd{(mut_status_EA, EA_cohort_clindata,} \hlkwc{by}\hlstd{=}\hlkwd{c}\hlstd{(}\hlstr{"track_name"}\hlstd{))}
+\hlstd{EA_mutstatus_merged}\hlopt{$}\hlstd{MAPKAPK2} \hlkwb{<-} \hlstd{EA_mutstatus_merged}\hlopt{$}\hlstd{MAPKAPK2..mRNA.Expression..log.RNA.Seq.V2.RSEM.}
+\hlstd{EA_mutstatus_merged} \hlkwb{<-} \hlstd{EA_mutstatus_merged[}\hlopt{!}\hlkwd{is.na}\hlstd{(EA_mutstatus_merged}\hlopt{$}\hlstd{censor),]}
+
+
+\hlcom{#  create a custom theme based off theme_bw()}
+
+\hlstd{theme_ks} \hlkwb{<-} \hlkwa{function}\hlstd{() \{}
+  \hlkwd{theme_bw}\hlstd{(}\hlkwc{base_size}\hlstd{=}\hlnum{12}\hlstd{)} \hlopt{%+replace%}
+    \hlkwd{theme}\hlstd{(}
+      \hlkwc{text}\hlstd{=}\hlkwd{element_text}\hlstd{(}\hlkwc{size}\hlstd{=}\hlnum{18}\hlstd{),}
+      \hlkwc{legend.position} \hlstd{=} \hlstr{"bottom"}\hlstd{,}
+
+      \hlstd{)}
+\hlstd{\}}
+
+\hlcom{# stratified by stage}
+
+\hlkwd{ggplot}\hlstd{(EA_mutstatus_merged,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=}\hlkwd{as.factor}\hlstd{(EGFR.simp),} \hlkwc{y}\hlstd{=MAPKAPK2,} \hlkwc{fill}\hlstd{=}\hlkwd{as.factor}\hlstd{(censor_2yr)))}\hlopt{+}
+  \hlkwd{geom_boxplot}\hlstd{(}\hlkwc{outlier.size}\hlstd{=}\hlnum{0}\hlstd{)}\hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{position} \hlstd{=}\hlkwd{position_jitterdodge}\hlstd{())}\hlopt{+}
+  \hlstd{ggpubr}\hlopt{::}\hlkwd{stat_compare_means}\hlstd{()}\hlopt{+}
+  \hlkwd{theme_ks}\hlstd{()}\hlopt{+}
+  \hlkwd{xlab}\hlstd{(}\hlstr{"EGFR mutation status"}\hlstd{)}\hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlstr{"MAPK2 transcript level"}\hlstd{)}\hlopt{+}
+  \hlkwd{facet_wrap}\hlstd{(}\hlopt{~}\hlstd{Stage.simp)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.6\linewidth]{figure/mut-status-Rnwauto-report-1} 
+
+}
+
+
+\begin{kframe}\begin{alltt}
+\hlkwd{ggplot}\hlstd{(EA_mutstatus_merged,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=}\hlkwd{as.factor}\hlstd{(KRAS.simp),} \hlkwc{y}\hlstd{=MAPKAPK2,} \hlkwc{fill}\hlstd{=}\hlkwd{as.factor}\hlstd{(censor_2yr)))}\hlopt{+}
+  \hlkwd{geom_boxplot}\hlstd{(}\hlkwc{outlier.size}\hlstd{=}\hlnum{0}\hlstd{)}\hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{position} \hlstd{=}\hlkwd{position_jitterdodge}\hlstd{())}\hlopt{+}
+  \hlkwd{theme_ks}\hlstd{()}\hlopt{+}
+  \hlstd{ggpubr}\hlopt{::}\hlkwd{stat_compare_means}\hlstd{()}\hlopt{+}
+   \hlkwd{xlab}\hlstd{(}\hlstr{"KRAS mutation status"}\hlstd{)}\hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlstr{"MAPK2 transcript level"}\hlstd{)}\hlopt{+}
+  \hlkwd{facet_wrap}\hlstd{(}\hlopt{~}\hlstd{Stage.simp)}
+\end{alltt}
+
+
+{\ttfamily\noindent\color{warningcolor}{\#\# Warning: Computation failed in `stat\_compare\_means()`:\\\#\# Problem with `mutate()` input `p`.\\\#\# x all observations are in the same group\\\#\# i Input `p` is `purrr::map(...)`.}}
+
+{\ttfamily\noindent\color{warningcolor}{\#\# Warning: Computation failed in `stat\_compare\_means()`:\\\#\# Problem with `mutate()` input `p`.\\\#\# x all observations are in the same group\\\#\# i Input `p` is `purrr::map(...)`.}}\end{kframe}
+
+{\centering \includegraphics[width=.6\linewidth]{figure/mut-status-Rnwauto-report-2} 
+
+}
+
+
+\begin{kframe}\begin{alltt}
+\hlkwd{ggplot}\hlstd{(EA_mutstatus_merged,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=}\hlkwd{as.factor}\hlstd{(TP53.simp),} \hlkwc{y}\hlstd{=MAPKAPK2,} \hlkwc{fill}\hlstd{=}\hlkwd{as.factor}\hlstd{(censor_2yr)))}\hlopt{+}
+  \hlkwd{geom_boxplot}\hlstd{(}\hlkwc{outlier.size}\hlstd{=}\hlnum{0}\hlstd{)}\hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{position} \hlstd{=}\hlkwd{position_jitterdodge}\hlstd{())}\hlopt{+}
+  \hlkwd{theme_ks}\hlstd{()}\hlopt{+}
+  \hlstd{ggpubr}\hlopt{::}\hlkwd{stat_compare_means}\hlstd{()}\hlopt{+}
+   \hlkwd{xlab}\hlstd{(}\hlstr{"TP53 mutation status"}\hlstd{)}\hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlstr{"MAPK2 transcript level"}\hlstd{)}\hlopt{+}
+  \hlkwd{facet_wrap}\hlstd{(}\hlopt{~}\hlstd{Stage.simp)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.6\linewidth]{figure/mut-status-Rnwauto-report-3} 
+
+}
+
+
+\begin{kframe}\begin{alltt}
+\hlcom{# without stratification }
+\hlstd{p4} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(EA_mutstatus_merged,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=}\hlkwd{as.factor}\hlstd{(EGFR.simp),} \hlkwc{y}\hlstd{=MAPKAPK2))}\hlopt{+}
+  \hlkwd{geom_boxplot}\hlstd{(}\hlkwc{outlier.size}\hlstd{=}\hlnum{0}\hlstd{)}\hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{position} \hlstd{=}\hlkwd{position_jitter}\hlstd{())}\hlopt{+}
+  \hlstd{ggpubr}\hlopt{::}\hlkwd{stat_compare_means}\hlstd{()}\hlopt{+}
+  \hlkwd{theme_ks}\hlstd{()}\hlopt{+}
+  \hlkwd{xlab}\hlstd{(}\hlstr{"EGFR mutation status"}\hlstd{)}\hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlstr{"MAPK2 transcript level"}\hlstd{)}
+
+\hlstd{p5} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(EA_mutstatus_merged,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=}\hlkwd{as.factor}\hlstd{(KRAS.simp),} \hlkwc{y}\hlstd{=MAPKAPK2))}\hlopt{+}
+  \hlkwd{geom_boxplot}\hlstd{(}\hlkwc{outlier.size}\hlstd{=}\hlnum{0}\hlstd{)}\hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{position} \hlstd{=}\hlkwd{position_jitter}\hlstd{())}\hlopt{+}
+  \hlkwd{theme_ks}\hlstd{()}\hlopt{+}
+  \hlstd{ggpubr}\hlopt{::}\hlkwd{stat_compare_means}\hlstd{()}\hlopt{+}
+   \hlkwd{xlab}\hlstd{(}\hlstr{"KRAS mutation status"}\hlstd{)}\hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlstr{"MAPK2 transcript level"}\hlstd{)}
+
+\hlstd{p6} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(EA_mutstatus_merged,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=}\hlkwd{as.factor}\hlstd{(TP53.simp),} \hlkwc{y}\hlstd{=MAPKAPK2))}\hlopt{+}
+  \hlkwd{geom_boxplot}\hlstd{(}\hlkwc{outlier.size}\hlstd{=}\hlnum{0}\hlstd{)}\hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{position} \hlstd{=}\hlkwd{position_jitter}\hlstd{())}\hlopt{+}
+  \hlkwd{theme_ks}\hlstd{()}\hlopt{+}
+  \hlstd{ggpubr}\hlopt{::}\hlkwd{stat_compare_means}\hlstd{()}\hlopt{+}
+   \hlkwd{xlab}\hlstd{(}\hlstr{"TP53 mutation status"}\hlstd{)}\hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlstr{"MAPK2 transcript level"}\hlstd{)}
+
+\hlstd{gridExtra}\hlopt{::}\hlkwd{grid.arrange}\hlstd{(p4,p5,p6,} \hlkwc{ncol}\hlstd{=}\hlnum{3}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.6\linewidth]{figure/mut-status-Rnwauto-report-4} 
+
+}
+
+
+\begin{kframe}\begin{alltt}
+\hlcom{# COx PH for validation dataset with oncogene sensitivity analysis.}
+\hlstd{EA_mutstatus_merged}\hlopt{$}\hlstd{MK2_topQ} \hlkwb{<-} \hlkwd{sapply}\hlstd{(EA_mutstatus_merged}\hlopt{$}\hlstd{MAPKAPK2,} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)} \hlkwa{if}\hlstd{(x} \hlopt{>} \hlkwd{quantile}\hlstd{(EA_mutstatus_merged}\hlopt{$}\hlstd{MAPKAPK2,}  \hlnum{0.66}\hlstd{))} \hlkwd{return}\hlstd{(}\hlnum{1}\hlstd{)} \hlkwa{else} \hlkwd{return}\hlstd{(}\hlnum{0}\hlstd{))}
+
+\hlstd{EA_base_model} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time, censor_2yr)} \hlopt{~} \hlkwd{as.factor}\hlstd{(MK2_topQ)}\hlopt{+}
+                         \hlstd{Sex}\hlopt{+}\hlstd{Smoking.status}\hlopt{+}\hlstd{Age}\hlopt{+}\hlstd{Stage.simp,} \hlkwc{id}\hlstd{=Sample.ID,} \hlkwc{data}\hlstd{=EA_mutstatus_merged)}
+\hlstd{EA_base_model_EGFR} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time, censor_2yr)} \hlopt{~} \hlkwd{as.factor}\hlstd{(MK2_topQ)}\hlopt{+}
+                         \hlstd{Sex}\hlopt{+}\hlstd{Smoking.status}\hlopt{+}\hlstd{Age}\hlopt{+}\hlstd{Stage.simp}\hlopt{+}\hlstd{EGFR.simp,} \hlkwc{id}\hlstd{=Sample.ID,} \hlkwc{data}\hlstd{=EA_mutstatus_merged)}
+\hlstd{EA_base_model_KRAS} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time, censor_2yr)} \hlopt{~} \hlkwd{as.factor}\hlstd{(MK2_topQ)}\hlopt{+}
+                         \hlstd{Sex}\hlopt{+}\hlstd{Smoking.status}\hlopt{+}\hlstd{Age}\hlopt{+}\hlstd{Stage.simp}\hlopt{+}\hlstd{KRAS.simp,} \hlkwc{id}\hlstd{=Sample.ID,} \hlkwc{data}\hlstd{=EA_mutstatus_merged)}
+\hlstd{EA_base_model_TP53} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time, censor_2yr)} \hlopt{~} \hlkwd{as.factor}\hlstd{(MK2_topQ)}\hlopt{+}
+                         \hlstd{Sex}\hlopt{+}\hlstd{Smoking.status}\hlopt{+}\hlstd{Age}\hlopt{+}\hlstd{Stage.simp}\hlopt{+}\hlstd{TP53.simp,} \hlkwc{id}\hlstd{=Sample.ID,} \hlkwc{data}\hlstd{=EA_mutstatus_merged)}
+\hlkwd{cox.zph}\hlstd{(EA_base_model)}
+\end{alltt}
+\begin{verbatim}
+##                     chisq df    p
+## as.factor(MK2_topQ) 0.849  1 0.36
+## Sex                 1.393  1 0.24
+## Smoking.status      0.769  1 0.38
+## Age                 0.493  1 0.48
+## Stage.simp          0.596  1 0.44
+## GLOBAL              3.335  5 0.65
+\end{verbatim}
+\begin{alltt}
+\hlkwd{cox.zph}\hlstd{(EA_base_model_EGFR)}
+\end{alltt}
+\begin{verbatim}
+##                     chisq df     p
+## as.factor(MK2_topQ) 0.845  1 0.358
+## Sex                 1.499  1 0.221
+## Smoking.status      0.899  1 0.343
+## Age                 0.576  1 0.448
+## Stage.simp          0.554  1 0.457
+## EGFR.simp           3.001  1 0.083
+## GLOBAL              4.903  6 0.556
+\end{verbatim}
+\begin{alltt}
+\hlkwd{cox.zph}\hlstd{(EA_base_model_KRAS)}
+\end{alltt}
+\begin{verbatim}
+##                     chisq df    p
+## as.factor(MK2_topQ) 0.833  1 0.36
+## Sex                 1.422  1 0.23
+## Smoking.status      0.804  1 0.37
+## Age                 0.502  1 0.48
+## Stage.simp          0.571  1 0.45
+## KRAS.simp           0.118  1 0.73
+## GLOBAL              3.343  6 0.76
+\end{verbatim}
+\begin{alltt}
+\hlkwd{cox.zph}\hlstd{(EA_base_model_TP53)}
+\end{alltt}
+\begin{verbatim}
+##                     chisq df    p
+## as.factor(MK2_topQ) 0.831  1 0.36
+## Sex                 1.530  1 0.22
+## Smoking.status      0.834  1 0.36
+## Age                 0.596  1 0.44
+## Stage.simp          0.505  1 0.48
+## TP53.simp           0.933  1 0.33
+## GLOBAL              4.164  6 0.65
+\end{verbatim}
+\begin{alltt}
+\hlkwd{summary}\hlstd{(EA_base_model)}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor_2yr) ~ as.factor(MK2_topQ) + 
+##     Sex + Smoking.status + Age + Stage.simp, data = EA_mutstatus_merged, 
+##     id = Sample.ID)
+## 
+##   n= 169, number of events= 16 
+## 
+##                          coef exp(coef) se(coef)      z Pr(>|z|)   
+## as.factor(MK2_topQ)1 -2.24096   0.10636  1.03755 -2.160  0.03078 * 
+## SexMale               0.26098   1.29820  0.59959  0.435  0.66337   
+## Smoking.statusYes     1.23779   3.44798  0.62527  1.980  0.04775 * 
+## Age                   0.02850   1.02891  0.02482  1.148  0.25087   
+## Stage.simpLate Stage  1.33972   3.81799  0.50235  2.667  0.00766 **
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##                      exp(coef) exp(-coef) lower .95 upper .95
+## as.factor(MK2_topQ)1    0.1064     9.4024   0.01392    0.8127
+## SexMale                 1.2982     0.7703   0.40084    4.2045
+## Smoking.statusYes       3.4480     0.2900   1.01235   11.7435
+## Age                     1.0289     0.9719   0.98005    1.0802
+## Stage.simpLate Stage    3.8180     0.2619   1.42637   10.2197
+## 
+## Concordance= 0.836  (se = 0.043 )
+## Likelihood ratio test= 23.95  on 5 df,   p=2e-04
+## Wald test            = 19.84  on 5 df,   p=0.001
+## Score (logrank) test = 24.04  on 5 df,   p=2e-04
+\end{verbatim}
+\begin{alltt}
+\hlkwd{summary}\hlstd{(EA_base_model_EGFR)}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor_2yr) ~ as.factor(MK2_topQ) + 
+##     Sex + Smoking.status + Age + Stage.simp + EGFR.simp, data = EA_mutstatus_merged, 
+##     id = Sample.ID)
+## 
+##   n= 169, number of events= 16 
+## 
+##                          coef exp(coef) se(coef)      z Pr(>|z|)   
+## as.factor(MK2_topQ)1 -2.24509   0.10592  1.03722 -2.165  0.03042 * 
+## SexMale              -0.00402   0.99599  0.67020 -0.006  0.99521   
+## Smoking.statusYes     1.05111   2.86083  0.67604  1.555  0.11999   
+## Age                   0.02940   1.02984  0.02464  1.193  0.23278   
+## Stage.simpLate Stage  1.44556   4.24424  0.51120  2.828  0.00469 **
+## EGFR.simpWild-Type    0.78575   2.19405  0.62383  1.260  0.20783   
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##                      exp(coef) exp(-coef) lower .95 upper .95
+## as.factor(MK2_topQ)1    0.1059     9.4413   0.01387    0.8088
+## SexMale                 0.9960     1.0040   0.26778    3.7045
+## Smoking.statusYes       2.8608     0.3495   0.76040   10.7632
+## Age                     1.0298     0.9710   0.98129    1.0808
+## Stage.simpLate Stage    4.2442     0.2356   1.55834   11.5595
+## EGFR.simpWild-Type      2.1941     0.4558   0.64602    7.4516
+## 
+## Concordance= 0.84  (se = 0.034 )
+## Likelihood ratio test= 25.62  on 6 df,   p=3e-04
+## Wald test            = 21.63  on 6 df,   p=0.001
+## Score (logrank) test = 25.72  on 6 df,   p=3e-04
+\end{verbatim}
+\begin{alltt}
+\hlkwd{summary}\hlstd{(EA_base_model_KRAS)}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor_2yr) ~ as.factor(MK2_topQ) + 
+##     Sex + Smoking.status + Age + Stage.simp + KRAS.simp, data = EA_mutstatus_merged, 
+##     id = Sample.ID)
+## 
+##   n= 169, number of events= 16 
+## 
+##                          coef exp(coef) se(coef)      z Pr(>|z|)   
+## as.factor(MK2_topQ)1 -2.27012   0.10330  1.04452 -2.173  0.02975 * 
+## SexMale               0.26277   1.30052  0.59976  0.438  0.66130   
+## Smoking.statusYes     1.21968   3.38612  0.63033  1.935  0.05299 . 
+## Age                   0.02881   1.02923  0.02494  1.155  0.24811   
+## Stage.simpLate Stage  1.34419   3.83507  0.50262  2.674  0.00749 **
+## KRAS.simpWild-Type   -0.27676   0.75823  1.05995 -0.261  0.79401   
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##                      exp(coef) exp(-coef) lower .95 upper .95
+## as.factor(MK2_topQ)1    0.1033     9.6805   0.01334    0.8002
+## SexMale                 1.3005     0.7689   0.40142    4.2134
+## Smoking.statusYes       3.3861     0.2953   0.98438   11.6477
+## Age                     1.0292     0.9716   0.98012    1.0808
+## Stage.simpLate Stage    3.8351     0.2608   1.43201   10.2707
+## KRAS.simpWild-Type      0.7582     1.3189   0.09497    6.0539
+## 
+## Concordance= 0.834  (se = 0.043 )
+## Likelihood ratio test= 24.02  on 6 df,   p=5e-04
+## Wald test            = 20.01  on 6 df,   p=0.003
+## Score (logrank) test = 24.05  on 6 df,   p=5e-04
+\end{verbatim}
+\begin{alltt}
+\hlkwd{summary}\hlstd{(EA_base_model_TP53)}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor_2yr) ~ as.factor(MK2_topQ) + 
+##     Sex + Smoking.status + Age + Stage.simp + TP53.simp, data = EA_mutstatus_merged, 
+##     id = Sample.ID)
+## 
+##   n= 169, number of events= 16 
+## 
+##                          coef exp(coef) se(coef)      z Pr(>|z|)   
+## as.factor(MK2_topQ)1 -2.17738   0.11334  1.03892 -2.096  0.03610 * 
+## SexMale               0.23329   1.26275  0.61179  0.381  0.70296   
+## Smoking.statusYes     1.36104   3.90026  0.64117  2.123  0.03378 * 
+## Age                   0.02232   1.02257  0.02578  0.866  0.38650   
+## Stage.simpLate Stage  1.40292   4.06705  0.50572  2.774  0.00554 **
+## TP53.simpWild-Type    0.64711   1.91002  0.60422  1.071  0.28417   
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##                      exp(coef) exp(-coef) lower .95 upper .95
+## as.factor(MK2_topQ)1    0.1133     8.8232   0.01479    0.8684
+## SexMale                 1.2627     0.7919   0.38068    4.1886
+## Smoking.statusYes       3.9003     0.2564   1.11001   13.7044
+## Age                     1.0226     0.9779   0.97220    1.0756
+## Stage.simpLate Stage    4.0670     0.2459   1.50942   10.9584
+## TP53.simpWild-Type      1.9100     0.5236   0.58442    6.2423
+## 
+## Concordance= 0.832  (se = 0.041 )
+## Likelihood ratio test= 25.2  on 6 df,   p=3e-04
+## Wald test            = 21.05  on 6 df,   p=0.002
+## Score (logrank) test = 25.71  on 6 df,   p=3e-04
+\end{verbatim}
+\begin{alltt}
+\hlstd{KRAS_EA} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time, censor_2yr)} \hlopt{~} \hlstd{KRAS.simp}\hlopt{+}
+                         \hlstd{Sex}\hlopt{+}\hlstd{Smoking.status}\hlopt{+}\hlstd{Age}\hlopt{+}\hlstd{Stage.simp,} \hlkwc{id}\hlstd{=Sample.ID,} \hlkwc{data}\hlstd{=EA_mutstatus_merged)}
+\hlstd{KRAS_EA_MK2} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time, censor_2yr)} \hlopt{~} \hlstd{KRAS.simp}\hlopt{+}
+                         \hlstd{Sex}\hlopt{+}\hlstd{Smoking.status}\hlopt{+}\hlstd{Age}\hlopt{+}\hlstd{Stage.simp}\hlopt{+}\hlstd{MK2_topQ,} \hlkwc{id}\hlstd{=Sample.ID,} \hlkwc{data}\hlstd{=EA_mutstatus_merged)}
+
+\hlcom{# TCGA Cohort work}
+
+\hlcom{# pull in mRNA for TCGA}
+
+\hlstd{TCGA_clindata} \hlkwb{<-} \hlkwd{read.table}\hlstd{(}\hlstr{"../rawdata/tcga-luad-clinical.processed_forCoxPH.csv"}\hlstd{,}\hlkwc{sep}\hlstd{=}\hlstr{"\textbackslash{}t"}\hlstd{,} \hlkwc{header}\hlstd{=}\hlnum{TRUE}\hlstd{)}
+
+
+\hlstd{TCGA_mutstatus_merged} \hlkwb{<-} \hlkwd{left_join}\hlstd{(mut_status_TCGA, TCGA_clindata,} \hlkwc{by}\hlstd{=}\hlkwd{c}\hlstd{(}\hlstr{"track_name"}\hlstd{=}\hlstr{"submitter_id"}\hlstd{))}
+\hlstd{TCGA_mutstatus_merged}\hlopt{$}\hlstd{MAPKAPK2} \hlkwb{<-} \hlstd{TCGA_mutstatus_merged}\hlopt{$}\hlstd{MK2.Expression}
+
+\hlstd{TCGA_mutstatus_merged} \hlkwb{<-} \hlstd{TCGA_mutstatus_merged[}\hlopt{!}\hlkwd{is.na}\hlstd{(TCGA_mutstatus_merged}\hlopt{$}\hlstd{ajcc_pathologic_stage_combined}\hlopt{!=}\hlstr{"NA"}\hlstd{),]}
+
+
+\hlstd{p7} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(TCGA_mutstatus_merged,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=}\hlkwd{as.factor}\hlstd{(EGFR.simp),} \hlkwc{y}\hlstd{=MAPKAPK2))}\hlopt{+}
+  \hlkwd{geom_boxplot}\hlstd{(}\hlkwc{outlier.size}\hlstd{=}\hlnum{0}\hlstd{)}\hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{position} \hlstd{=}\hlkwd{position_jitter}\hlstd{())}\hlopt{+}
+  \hlkwd{theme_ks}\hlstd{()}\hlopt{+}
+  \hlstd{ggpubr}\hlopt{::}\hlkwd{stat_compare_means}\hlstd{()}\hlopt{+}
+   \hlkwd{xlab}\hlstd{(}\hlstr{"EGFR mutation status"}\hlstd{)}\hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlstr{"MAPK2 transcript level"}\hlstd{)}
+
+\hlstd{p8} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(TCGA_mutstatus_merged,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=}\hlkwd{as.factor}\hlstd{(KRAS.simp),} \hlkwc{y}\hlstd{=MAPKAPK2))}\hlopt{+}
+  \hlkwd{geom_boxplot}\hlstd{(}\hlkwc{outlier.size}\hlstd{=}\hlnum{0}\hlstd{)}\hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{position} \hlstd{=}\hlkwd{position_jitter}\hlstd{())}\hlopt{+}
+  \hlkwd{theme_ks}\hlstd{()}\hlopt{+}
+  \hlstd{ggpubr}\hlopt{::}\hlkwd{stat_compare_means}\hlstd{()}\hlopt{+}
+   \hlkwd{xlab}\hlstd{(}\hlstr{"KRAS mutation status"}\hlstd{)}\hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlstr{"MAPK2 transcript level"}\hlstd{)}
+
+\hlstd{p9} \hlkwb{<-} \hlkwd{ggplot}\hlstd{(TCGA_mutstatus_merged,} \hlkwd{aes}\hlstd{(}\hlkwc{x}\hlstd{=}\hlkwd{as.factor}\hlstd{(TP53.simp),} \hlkwc{y}\hlstd{=MAPKAPK2))}\hlopt{+}
+  \hlkwd{geom_boxplot}\hlstd{(}\hlkwc{outlier.size}\hlstd{=}\hlnum{0}\hlstd{)}\hlopt{+}
+  \hlkwd{geom_point}\hlstd{(}\hlkwc{position} \hlstd{=}\hlkwd{position_jitter}\hlstd{())}\hlopt{+}
+  \hlkwd{theme_ks}\hlstd{()}\hlopt{+}
+  \hlstd{ggpubr}\hlopt{::}\hlkwd{stat_compare_means}\hlstd{()}\hlopt{+}
+   \hlkwd{xlab}\hlstd{(}\hlstr{"TP53 mutation status"}\hlstd{)}\hlopt{+}
+  \hlkwd{ylab}\hlstd{(}\hlstr{"MAPK2 transcript level"}\hlstd{)}
+
+\hlstd{gridExtra}\hlopt{::}\hlkwd{grid.arrange}\hlstd{(p7,p8,p9,} \hlkwc{ncol}\hlstd{=}\hlnum{3}\hlstd{)}
+\end{alltt}
+\end{kframe}
+
+{\centering \includegraphics[width=.6\linewidth]{figure/mut-status-Rnwauto-report-5} 
+
+}
+
+
+\begin{kframe}\begin{alltt}
+\hlcom{# Cox PH}
+\hlstd{base_model}\hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time, censor.2y)} \hlopt{~} \hlstd{MK2_Expression_topQ}\hlopt{+}
+                \hlstd{gender}\hlopt{+}\hlstd{smoking}\hlopt{+}\hlstd{age_at_diagnosis,} \hlkwc{id}\hlstd{=track_name,}
+              \hlkwc{data}\hlstd{=TCGA_mutstatus_merged[TCGA_mutstatus_merged}\hlopt{$}\hlstd{ajcc_pathologic_stage_combined}\hlopt{==}\hlstr{"Early Stage"}\hlstd{,])}
+\hlkwd{cox.zph}\hlstd{(base_model)}
+\end{alltt}
+\begin{verbatim}
+##                     chisq df    p
+## MK2_Expression_topQ 2.018  1 0.16
+## gender              1.378  1 0.24
+## smoking             0.453  1 0.50
+## age_at_diagnosis    0.350  1 0.55
+## GLOBAL              4.152  4 0.39
+\end{verbatim}
+\begin{alltt}
+\hlstd{survminer}\hlopt{::}\hlkwd{ggcoxdiagnostics}\hlstd{(base_model,} \hlkwc{type}\hlstd{=}\hlstr{"dfbeta"}\hlstd{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# `geom\_smooth()` using formula 'y \textasciitilde{} x'}}\end{kframe}
+
+{\centering \includegraphics[width=.6\linewidth]{figure/mut-status-Rnwauto-report-6} 
+
+}
+
+
+\begin{kframe}\begin{alltt}
+\hlstd{survminer}\hlopt{::}\hlkwd{ggcoxdiagnostics}\hlstd{(base_model,} \hlkwc{type}\hlstd{=}\hlstr{"deviance"}\hlstd{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# `geom\_smooth()` using formula 'y \textasciitilde{} x'}}\end{kframe}
+
+{\centering \includegraphics[width=.6\linewidth]{figure/mut-status-Rnwauto-report-7} 
+
+}
+
+
+\begin{kframe}\begin{alltt}
+\hlstd{survminer}\hlopt{::}\hlkwd{ggcoxdiagnostics}\hlstd{(base_model,} \hlkwc{type}\hlstd{=}\hlstr{"schoenfeld"}\hlstd{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# `geom\_smooth()` using formula 'y \textasciitilde{} x'}}\end{kframe}
+
+{\centering \includegraphics[width=.6\linewidth]{figure/mut-status-Rnwauto-report-8} 
+
+}
+
+
+\begin{kframe}\begin{alltt}
+\hlkwd{summary}\hlstd{(base_model)}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor.2y) ~ MK2_Expression_topQ + 
+##     gender + smoking + age_at_diagnosis, data = TCGA_mutstatus_merged[TCGA_mutstatus_merged$ajcc_pathologic_stage_combined == 
+##     "Early Stage", ], id = track_name)
+## 
+##   n= 309, number of events= 54 
+##    (7 observations deleted due to missingness)
+## 
+##                          coef exp(coef)  se(coef)      z Pr(>|z|)  
+## MK2_Expression_topQ -0.623727  0.535943  0.319235 -1.954   0.0507 .
+## gendermale           0.417540  1.518222  0.273696  1.526   0.1271  
+## smoking              0.289705  1.336033  0.329954  0.878   0.3799  
+## age_at_diagnosis     0.004669  1.004680  0.014572  0.320   0.7487  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##                     exp(coef) exp(-coef) lower .95 upper .95
+## MK2_Expression_topQ    0.5359     1.8659    0.2867     1.002
+## gendermale             1.5182     0.6587    0.8879     2.596
+## smoking                1.3360     0.7485    0.6998     2.551
+## age_at_diagnosis       1.0047     0.9953    0.9764     1.034
+## 
+## Concordance= 0.622  (se = 0.038 )
+## Likelihood ratio test= 7.83  on 4 df,   p=0.1
+## Wald test            = 7.43  on 4 df,   p=0.1
+## Score (logrank) test = 7.64  on 4 df,   p=0.1
+\end{verbatim}
+\begin{alltt}
+\hlcom{# driver mutations alone}
+
+\hlkwd{summary}\hlstd{(}\hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time,censor.2y)}\hlopt{~}\hlstd{EGFR.simp,} \hlkwc{id}\hlstd{=track_name,}
+\hlkwc{data}\hlstd{=TCGA_mutstatus_merged[TCGA_mutstatus_merged}\hlopt{$}\hlstd{ajcc_pathologic_stage_combined}\hlopt{==}\hlstr{"Early Stage"}\hlstd{,]))}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor.2y) ~ EGFR.simp, data = TCGA_mutstatus_merged[TCGA_mutstatus_merged$ajcc_pathologic_stage_combined == 
+##     "Early Stage", ], id = track_name)
+## 
+##   n= 316, number of events= 58 
+## 
+##                       coef exp(coef) se(coef)      z Pr(>|z|)
+## EGFR.simpWild-Type -0.2620    0.7695   0.3809 -0.688    0.492
+## 
+##                    exp(coef) exp(-coef) lower .95 upper .95
+## EGFR.simpWild-Type    0.7695        1.3    0.3647     1.623
+## 
+## Concordance= 0.511  (se = 0.022 )
+## Likelihood ratio test= 0.44  on 1 df,   p=0.5
+## Wald test            = 0.47  on 1 df,   p=0.5
+## Score (logrank) test = 0.48  on 1 df,   p=0.5
+\end{verbatim}
+\begin{alltt}
+\hlkwd{summary}\hlstd{(}\hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time,censor.2y)}\hlopt{~}\hlstd{KRAS.simp,} \hlkwc{id}\hlstd{=track_name,}
+\hlkwc{data}\hlstd{=TCGA_mutstatus_merged[TCGA_mutstatus_merged}\hlopt{$}\hlstd{ajcc_pathologic_stage_combined}\hlopt{==}\hlstr{"Early Stage"}\hlstd{,]))}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor.2y) ~ KRAS.simp, data = TCGA_mutstatus_merged[TCGA_mutstatus_merged$ajcc_pathologic_stage_combined == 
+##     "Early Stage", ], id = track_name)
+## 
+##   n= 316, number of events= 58 
+## 
+##                       coef exp(coef) se(coef)      z Pr(>|z|)
+## KRAS.simpWild-Type -0.2823    0.7541   0.2799 -1.009    0.313
+## 
+##                    exp(coef) exp(-coef) lower .95 upper .95
+## KRAS.simpWild-Type    0.7541      1.326    0.4357     1.305
+## 
+## Concordance= 0.539  (se = 0.032 )
+## Likelihood ratio test= 0.98  on 1 df,   p=0.3
+## Wald test            = 1.02  on 1 df,   p=0.3
+## Score (logrank) test = 1.02  on 1 df,   p=0.3
+\end{verbatim}
+\begin{alltt}
+\hlkwd{summary}\hlstd{(}\hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time,censor.2y)}\hlopt{~}\hlstd{TP53.simp,} \hlkwc{id}\hlstd{=track_name,}
+\hlkwc{data}\hlstd{=TCGA_mutstatus_merged[TCGA_mutstatus_merged}\hlopt{$}\hlstd{ajcc_pathologic_stage_combined}\hlopt{==}\hlstr{"Early Stage"}\hlstd{,]))}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor.2y) ~ TP53.simp, data = TCGA_mutstatus_merged[TCGA_mutstatus_merged$ajcc_pathologic_stage_combined == 
+##     "Early Stage", ], id = track_name)
+## 
+##   n= 316, number of events= 58 
+## 
+##                       coef exp(coef) se(coef)      z Pr(>|z|)  
+## TP53.simpWild-Type -0.7087    0.4923   0.2840 -2.496   0.0126 *
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##                    exp(coef) exp(-coef) lower .95 upper .95
+## TP53.simpWild-Type    0.4923      2.031    0.2822    0.8589
+## 
+## Concordance= 0.578  (se = 0.032 )
+## Likelihood ratio test= 6.69  on 1 df,   p=0.01
+## Wald test            = 6.23  on 1 df,   p=0.01
+## Score (logrank) test = 6.49  on 1 df,   p=0.01
+\end{verbatim}
+\begin{alltt}
+\hlcom{# base model + driver mutations}
+\hlstd{base_model_egfr} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time, censor.2y)} \hlopt{~} \hlstd{MK2_Expression_topQ}\hlopt{+}
+                \hlstd{gender}\hlopt{+}\hlstd{smoking}\hlopt{+}\hlstd{age_at_diagnosis}\hlopt{+}\hlstd{EGFR.simp,} \hlkwc{id}\hlstd{=track_name,}
+              \hlkwc{data}\hlstd{=TCGA_mutstatus_merged[TCGA_mutstatus_merged}\hlopt{$}\hlstd{ajcc_pathologic_stage_combined}\hlopt{==}\hlstr{"Early Stage"}\hlstd{,])}
+\hlkwd{summary}\hlstd{(base_model_egfr)}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor.2y) ~ MK2_Expression_topQ + 
+##     gender + smoking + age_at_diagnosis + EGFR.simp, data = TCGA_mutstatus_merged[TCGA_mutstatus_merged$ajcc_pathologic_stage_combined == 
+##     "Early Stage", ], id = track_name)
+## 
+##   n= 309, number of events= 54 
+##    (7 observations deleted due to missingness)
+## 
+##                         coef exp(coef) se(coef)      z Pr(>|z|)  
+## MK2_Expression_topQ -0.59551   0.55128  0.32090 -1.856   0.0635 .
+## gendermale           0.42856   1.53504  0.27434  1.562   0.1182  
+## smoking              0.37538   1.45554  0.34285  1.095   0.2736  
+## age_at_diagnosis     0.00556   1.00558  0.01476  0.377   0.7064  
+## EGFR.simpWild-Type  -0.41567   0.65990  0.40072 -1.037   0.2996  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##                     exp(coef) exp(-coef) lower .95 upper .95
+## MK2_Expression_topQ    0.5513     1.8140    0.2939     1.034
+## gendermale             1.5350     0.6514    0.8966     2.628
+## smoking                1.4555     0.6870    0.7433     2.850
+## age_at_diagnosis       1.0056     0.9945    0.9769     1.035
+## EGFR.simpWild-Type     0.6599     1.5154    0.3009     1.447
+## 
+## Concordance= 0.619  (se = 0.038 )
+## Likelihood ratio test= 8.82  on 5 df,   p=0.1
+## Wald test            = 8.56  on 5 df,   p=0.1
+## Score (logrank) test = 8.78  on 5 df,   p=0.1
+\end{verbatim}
+\begin{alltt}
+  \hlkwd{cox.zph}\hlstd{(base_model_egfr)}
+\end{alltt}
+\begin{verbatim}
+##                     chisq df    p
+## MK2_Expression_topQ 2.025  1 0.15
+## gender              1.382  1 0.24
+## smoking             0.456  1 0.50
+## age_at_diagnosis    0.407  1 0.52
+## EGFR.simp           0.223  1 0.64
+## GLOBAL              4.908  5 0.43
+\end{verbatim}
+\begin{alltt}
+\hlstd{survminer}\hlopt{::}\hlkwd{ggcoxdiagnostics}\hlstd{(base_model_egfr,} \hlkwc{type}\hlstd{=}\hlstr{"schoenfeld"}\hlstd{)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# `geom\_smooth()` using formula 'y \textasciitilde{} x'}}\end{kframe}
+
+{\centering \includegraphics[width=.6\linewidth]{figure/mut-status-Rnwauto-report-9} 
+
+}
+
+
+\begin{kframe}\begin{alltt}
+\hlstd{base_model_kras} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time, censor.2y)} \hlopt{~} \hlstd{MK2_Expression_topQ}\hlopt{+}
+                \hlstd{gender}\hlopt{+}\hlstd{smoking}\hlopt{+}\hlstd{age_at_diagnosis}\hlopt{+}\hlstd{KRAS.simp,} \hlkwc{id}\hlstd{=track_name,}
+              \hlkwc{data}\hlstd{=TCGA_mutstatus_merged[TCGA_mutstatus_merged}\hlopt{$}\hlstd{ajcc_pathologic_stage_combined}\hlopt{==}\hlstr{"Early Stage"}\hlstd{,])}
+\hlkwd{summary}\hlstd{(base_model_kras)}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor.2y) ~ MK2_Expression_topQ + 
+##     gender + smoking + age_at_diagnosis + KRAS.simp, data = TCGA_mutstatus_merged[TCGA_mutstatus_merged$ajcc_pathologic_stage_combined == 
+##     "Early Stage", ], id = track_name)
+## 
+##   n= 309, number of events= 54 
+##    (7 observations deleted due to missingness)
+## 
+##                          coef exp(coef)  se(coef)      z Pr(>|z|)  
+## MK2_Expression_topQ -0.623725  0.535944  0.319076 -1.955   0.0506 .
+## gendermale           0.441507  1.555049  0.274348  1.609   0.1076  
+## smoking              0.263511  1.301492  0.330598  0.797   0.4254  
+## age_at_diagnosis     0.004577  1.004587  0.014595  0.314   0.7538  
+## KRAS.simpWild-Type  -0.340235  0.711603  0.290301 -1.172   0.2412  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##                     exp(coef) exp(-coef) lower .95 upper .95
+## MK2_Expression_topQ    0.5359     1.8659    0.2868     1.002
+## gendermale             1.5550     0.6431    0.9083     2.662
+## smoking                1.3015     0.7683    0.6808     2.488
+## age_at_diagnosis       1.0046     0.9954    0.9763     1.034
+## KRAS.simpWild-Type     0.7116     1.4053    0.4028     1.257
+## 
+## Concordance= 0.623  (se = 0.037 )
+## Likelihood ratio test= 9.15  on 5 df,   p=0.1
+## Wald test            = 8.68  on 5 df,   p=0.1
+## Score (logrank) test = 8.93  on 5 df,   p=0.1
+\end{verbatim}
+\begin{alltt}
+\hlstd{base_model_TP53} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time, censor.2y)} \hlopt{~} \hlstd{MK2_Expression_topQ}\hlopt{+}
+                \hlstd{gender}\hlopt{+}\hlstd{smoking}\hlopt{+}\hlstd{age_at_diagnosis}\hlopt{+}\hlstd{TP53.simp,} \hlkwc{id}\hlstd{=track_name,}
+              \hlkwc{data}\hlstd{=TCGA_mutstatus_merged[TCGA_mutstatus_merged}\hlopt{$}\hlstd{ajcc_pathologic_stage_combined}\hlopt{==}\hlstr{"Early Stage"}\hlstd{,])}
+\hlkwd{summary}\hlstd{(base_model_TP53)}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor.2y) ~ MK2_Expression_topQ + 
+##     gender + smoking + age_at_diagnosis + TP53.simp, data = TCGA_mutstatus_merged[TCGA_mutstatus_merged$ajcc_pathologic_stage_combined == 
+##     "Early Stage", ], id = track_name)
+## 
+##   n= 309, number of events= 54 
+##    (7 observations deleted due to missingness)
+## 
+##                         coef exp(coef) se(coef)      z Pr(>|z|)  
+## MK2_Expression_topQ -0.61071   0.54297  0.32024 -1.907   0.0565 .
+## gendermale           0.38070   1.46330  0.27488  1.385   0.1661  
+## smoking              0.22452   1.25172  0.33060  0.679   0.4971  
+## age_at_diagnosis     0.01123   1.01129  0.01443  0.778   0.4365  
+## TP53.simpWild-Type  -0.67772   0.50777  0.29976 -2.261   0.0238 *
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##                     exp(coef) exp(-coef) lower .95 upper .95
+## MK2_Expression_topQ    0.5430     1.8417    0.2899    1.0171
+## gendermale             1.4633     0.6834    0.8538    2.5079
+## smoking                1.2517     0.7989    0.6548    2.3929
+## age_at_diagnosis       1.0113     0.9888    0.9831    1.0403
+## TP53.simpWild-Type     0.5078     1.9694    0.2822    0.9137
+## 
+## Concordance= 0.653  (se = 0.038 )
+## Likelihood ratio test= 13.26  on 5 df,   p=0.02
+## Wald test            = 12.81  on 5 df,   p=0.03
+## Score (logrank) test = 13.19  on 5 df,   p=0.02
+\end{verbatim}
+\begin{alltt}
+\hlstd{base_model_egfr_l} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time, censor.2y)} \hlopt{~} \hlstd{MK2_Expression_topQ}\hlopt{+}
+                \hlstd{gender}\hlopt{+}\hlstd{smoking}\hlopt{+}\hlstd{age_at_diagnosis}\hlopt{+}\hlstd{EGFR.simp,} \hlkwc{id}\hlstd{=track_name,}
+              \hlkwc{data}\hlstd{=TCGA_mutstatus_merged[TCGA_mutstatus_merged}\hlopt{$}\hlstd{ajcc_pathologic_stage_combined}\hlopt{==}\hlstr{"Late Stage"}\hlstd{,])}
+\hlkwd{summary}\hlstd{(base_model_egfr_l)}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor.2y) ~ MK2_Expression_topQ + 
+##     gender + smoking + age_at_diagnosis + EGFR.simp, data = TCGA_mutstatus_merged[TCGA_mutstatus_merged$ajcc_pathologic_stage_combined == 
+##     "Late Stage", ], id = track_name)
+## 
+##   n= 85, number of events= 39 
+## 
+##                         coef exp(coef) se(coef)      z Pr(>|z|)
+## MK2_Expression_topQ -0.49986   0.60662  0.43288 -1.155    0.248
+## gendermale           0.03493   1.03554  0.33317  0.105    0.917
+## smoking             -0.08150   0.92174  0.34749 -0.235    0.815
+## age_at_diagnosis     0.01923   1.01941  0.01676  1.147    0.251
+## EGFR.simpWild-Type   0.02452   1.02482  0.47771  0.051    0.959
+## 
+##                     exp(coef) exp(-coef) lower .95 upper .95
+## MK2_Expression_topQ    0.6066     1.6485    0.2597     1.417
+## gendermale             1.0355     0.9657    0.5390     1.990
+## smoking                0.9217     1.0849    0.4665     1.821
+## age_at_diagnosis       1.0194     0.9810    0.9865     1.053
+## EGFR.simpWild-Type     1.0248     0.9758    0.4018     2.614
+## 
+## Concordance= 0.605  (se = 0.047 )
+## Likelihood ratio test= 3.36  on 5 df,   p=0.6
+## Wald test            = 3.09  on 5 df,   p=0.7
+## Score (logrank) test = 3.14  on 5 df,   p=0.7
+\end{verbatim}
+\begin{alltt}
+\hlkwd{cox.zph}\hlstd{(base_model_egfr_l)}
+\end{alltt}
+\begin{verbatim}
+##                        chisq df     p
+## MK2_Expression_topQ 0.100236  1 0.752
+## gender              0.000875  1 0.976
+## smoking             0.079898  1 0.777
+## age_at_diagnosis    0.089984  1 0.764
+## EGFR.simp           3.487714  1 0.062
+## GLOBAL              4.416616  5 0.491
+\end{verbatim}
+\begin{alltt}
+\hlstd{base_model_kras_l} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time, censor.2y)} \hlopt{~} \hlstd{MK2_Expression_topQ}\hlopt{+}
+                \hlstd{gender}\hlopt{+}\hlstd{smoking}\hlopt{+}\hlstd{age_at_diagnosis}\hlopt{+}\hlstd{KRAS.simp,} \hlkwc{id}\hlstd{=track_name,}
+              \hlkwc{data}\hlstd{=TCGA_mutstatus_merged[TCGA_mutstatus_merged}\hlopt{$}\hlstd{ajcc_pathologic_stage_combined}\hlopt{==}\hlstr{"Late Stage"}\hlstd{,])}
+\hlkwd{summary}\hlstd{(base_model_kras_l)}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor.2y) ~ MK2_Expression_topQ + 
+##     gender + smoking + age_at_diagnosis + KRAS.simp, data = TCGA_mutstatus_merged[TCGA_mutstatus_merged$ajcc_pathologic_stage_combined == 
+##     "Late Stage", ], id = track_name)
+## 
+##   n= 85, number of events= 39 
+## 
+##                         coef exp(coef) se(coef)      z Pr(>|z|)
+## MK2_Expression_topQ -0.45753   0.63284  0.42026 -1.089    0.276
+## gendermale           0.03799   1.03872  0.32253  0.118    0.906
+## smoking             -0.20912   0.81130  0.35147 -0.595    0.552
+## age_at_diagnosis     0.01603   1.01615  0.01683  0.952    0.341
+## KRAS.simpWild-Type  -0.56815   0.56657  0.34763 -1.634    0.102
+## 
+##                     exp(coef) exp(-coef) lower .95 upper .95
+## MK2_Expression_topQ    0.6328     1.5802    0.2777     1.442
+## gendermale             1.0387     0.9627    0.5520     1.955
+## smoking                0.8113     1.2326    0.4074     1.616
+## age_at_diagnosis       1.0162     0.9841    0.9832     1.050
+## KRAS.simpWild-Type     0.5666     1.7650    0.2866     1.120
+## 
+## Concordance= 0.619  (se = 0.051 )
+## Likelihood ratio test= 5.89  on 5 df,   p=0.3
+## Wald test            = 5.8  on 5 df,   p=0.3
+## Score (logrank) test = 5.95  on 5 df,   p=0.3
+\end{verbatim}
+\begin{alltt}
+\hlstd{base_model_TP53_l} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time, censor.2y)} \hlopt{~} \hlstd{MK2_Expression_topQ}\hlopt{+}
+                \hlstd{gender}\hlopt{+}\hlstd{smoking}\hlopt{+}\hlstd{age_at_diagnosis}\hlopt{+}\hlstd{TP53.simp,} \hlkwc{id}\hlstd{=track_name,}
+              \hlkwc{data}\hlstd{=TCGA_mutstatus_merged[TCGA_mutstatus_merged}\hlopt{$}\hlstd{ajcc_pathologic_stage_combined}\hlopt{==}\hlstr{"Late Stage"}\hlstd{,])}
+\hlkwd{summary}\hlstd{(base_model_TP53_l)}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor.2y) ~ MK2_Expression_topQ + 
+##     gender + smoking + age_at_diagnosis + TP53.simp, data = TCGA_mutstatus_merged[TCGA_mutstatus_merged$ajcc_pathologic_stage_combined == 
+##     "Late Stage", ], id = track_name)
+## 
+##   n= 85, number of events= 39 
+## 
+##                         coef exp(coef) se(coef)      z Pr(>|z|)
+## MK2_Expression_topQ -0.49062   0.61225  0.42135 -1.164    0.244
+## gendermale           0.02956   1.03000  0.32219  0.092    0.927
+## smoking             -0.10874   0.89696  0.34084 -0.319    0.750
+## age_at_diagnosis     0.01981   1.02001  0.01693  1.171    0.242
+## TP53.simpWild-Type   0.24661   1.27968  0.32411  0.761    0.447
+## 
+##                     exp(coef) exp(-coef) lower .95 upper .95
+## MK2_Expression_topQ    0.6122     1.6333    0.2681     1.398
+## gendermale             1.0300     0.9709    0.5478     1.937
+## smoking                0.8970     1.1149    0.4599     1.749
+## age_at_diagnosis       1.0200     0.9804    0.9867     1.054
+## TP53.simpWild-Type     1.2797     0.7814    0.6780     2.415
+## 
+## Concordance= 0.597  (se = 0.05 )
+## Likelihood ratio test= 3.93  on 5 df,   p=0.6
+## Wald test            = 3.51  on 5 df,   p=0.6
+## Score (logrank) test = 3.59  on 5 df,   p=0.6
+\end{verbatim}
+\begin{alltt}
+\hlcom{# KRAS mutation on survival}
+
+\hlstd{TCGA_mutstatus_merged}\hlopt{$}\hlstd{KRAS.simp.2} \hlkwb{<-} \hlkwd{sapply}\hlstd{(TCGA_mutstatus_merged}\hlopt{$}\hlstd{KRAS.simp,} \hlkwa{function}\hlstd{(}\hlkwc{x}\hlstd{)} \hlkwa{if}\hlstd{(x}\hlopt{==}\hlstr{"Wild-Type"}\hlstd{)} \hlkwd{return}\hlstd{(}\hlnum{0}\hlstd{)} \hlkwa{else} \hlkwd{return}\hlstd{(}\hlnum{1}\hlstd{))}
+\hlstd{TCGA_mutstatus_merged}\hlopt{$}\hlstd{KRAS.simp.2} \hlkwb{<-} \hlkwd{as.factor}\hlstd{(TCGA_mutstatus_merged}\hlopt{$}\hlstd{KRAS.simp.2)}
+\hlstd{KRAS_TCGA} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time,censor.2y)}\hlopt{~}\hlstd{KRAS.simp.2}\hlopt{+}\hlstd{gender}\hlopt{+}\hlstd{smoking}\hlopt{+}\hlstd{age_at_diagnosis}\hlopt{+}\hlstd{ajcc_pathologic_stage_combined,} \hlkwc{id}\hlstd{=track_name,}
+\hlkwc{data}\hlstd{=TCGA_mutstatus_merged)}
+\hlstd{KRAS_TCGA_MK2} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time,censor.2y)}\hlopt{~}\hlstd{KRAS.simp.2}\hlopt{+}\hlstd{gender}\hlopt{+}\hlstd{smoking}\hlopt{+}\hlstd{age_at_diagnosis}\hlopt{+}\hlstd{ajcc_pathologic_stage_combined}\hlopt{+}\hlstd{MK2_Expression_topQ,} \hlkwc{id}\hlstd{=track_name,}
+\hlkwc{data}\hlstd{=TCGA_mutstatus_merged)}
+\hlstd{KRAS_TCGA_MK2_int} \hlkwb{<-} \hlkwd{coxph}\hlstd{(}\hlkwd{Surv}\hlstd{(time,censor.2y)}\hlopt{~}\hlstd{KRAS.simp.2}\hlopt{+}\hlstd{gender}\hlopt{+}\hlstd{smoking}\hlopt{+}\hlstd{age_at_diagnosis}\hlopt{+}\hlstd{ajcc_pathologic_stage_combined}\hlopt{+}\hlstd{MK2_Expression_topQ}\hlopt{+}\hlstd{KRAS.simp.2}\hlopt{*}\hlstd{MK2_Expression_topQ,} \hlkwc{id}\hlstd{=track_name,}
+\hlkwc{data}\hlstd{=TCGA_mutstatus_merged)}
+
+\hlkwd{summary}\hlstd{(KRAS_TCGA)}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor.2y) ~ KRAS.simp.2 + gender + 
+##     smoking + age_at_diagnosis + ajcc_pathologic_stage_combined, 
+##     data = TCGA_mutstatus_merged, id = track_name)
+## 
+##   n= 394, number of events= 93 
+##    (7 observations deleted due to missingness)
+## 
+##                                             coef exp(coef) se(coef)     z Pr(>|z|)    
+## KRAS.simp.21                             0.44132   1.55475  0.22044 2.002   0.0453 *  
+## gendermale                               0.29085   1.33756  0.20772 1.400   0.1615    
+## smoking                                  0.03029   1.03076  0.23572 0.129   0.8977    
+## age_at_diagnosis                         0.01151   1.01158  0.01100 1.047   0.2952    
+## ajcc_pathologic_stage_combinedLate Stage 1.20226   3.32765  0.21354 5.630  1.8e-08 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##                                          exp(coef) exp(-coef) lower .95 upper .95
+## KRAS.simp.21                                 1.555     0.6432    1.0093     2.395
+## gendermale                                   1.338     0.7476    0.8902     2.010
+## smoking                                      1.031     0.9702    0.6494     1.636
+## age_at_diagnosis                             1.012     0.9886    0.9900     1.034
+## ajcc_pathologic_stage_combinedLate Stage     3.328     0.3005    2.1896     5.057
+## 
+## Concordance= 0.663  (se = 0.03 )
+## Likelihood ratio test= 34.17  on 5 df,   p=2e-06
+## Wald test            = 37.58  on 5 df,   p=5e-07
+## Score (logrank) test = 41.26  on 5 df,   p=8e-08
+\end{verbatim}
+\begin{alltt}
+\hlkwd{summary}\hlstd{(KRAS_TCGA_MK2)}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor.2y) ~ KRAS.simp.2 + gender + 
+##     smoking + age_at_diagnosis + ajcc_pathologic_stage_combined + 
+##     MK2_Expression_topQ, data = TCGA_mutstatus_merged, id = track_name)
+## 
+##   n= 394, number of events= 93 
+##    (7 observations deleted due to missingness)
+## 
+##                                              coef exp(coef) se(coef)      z Pr(>|z|)    
+## KRAS.simp.21                              0.41967   1.52147  0.22129  1.896   0.0579 .  
+## gendermale                                0.28744   1.33301  0.20781  1.383   0.1666    
+## smoking                                   0.06036   1.06222  0.23711  0.255   0.7991    
+## age_at_diagnosis                          0.01028   1.01034  0.01104  0.932   0.3515    
+## ajcc_pathologic_stage_combinedLate Stage  1.14903   3.15515  0.21465  5.353 8.65e-08 ***
+## MK2_Expression_topQ                      -0.58928   0.55472  0.25430 -2.317   0.0205 *  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##                                          exp(coef) exp(-coef) lower .95 upper .95
+## KRAS.simp.21                                1.5215     0.6573    0.9860    2.3476
+## gendermale                                  1.3330     0.7502    0.8870    2.0032
+## smoking                                     1.0622     0.9414    0.6674    1.6906
+## age_at_diagnosis                            1.0103     0.9898    0.9887    1.0324
+## ajcc_pathologic_stage_combinedLate Stage    3.1551     0.3169    2.0716    4.8054
+## MK2_Expression_topQ                         0.5547     1.8027    0.3370    0.9131
+## 
+## Concordance= 0.684  (se = 0.027 )
+## Likelihood ratio test= 40.1  on 6 df,   p=4e-07
+## Wald test            = 42.49  on 6 df,   p=1e-07
+## Score (logrank) test = 46.53  on 6 df,   p=2e-08
+\end{verbatim}
+\begin{alltt}
+\hlkwd{summary}\hlstd{(KRAS_TCGA_MK2_int)}
+\end{alltt}
+\begin{verbatim}
+## Call:
+## coxph(formula = Surv(time, censor.2y) ~ KRAS.simp.2 + gender + 
+##     smoking + age_at_diagnosis + ajcc_pathologic_stage_combined + 
+##     MK2_Expression_topQ + KRAS.simp.2 * MK2_Expression_topQ, 
+##     data = TCGA_mutstatus_merged, id = track_name)
+## 
+##   n= 394, number of events= 93 
+##    (7 observations deleted due to missingness)
+## 
+##                                              coef exp(coef) se(coef)      z Pr(>|z|)    
+## KRAS.simp.21                              0.31360   1.36834  0.25364  1.236   0.2163    
+## gendermale                                0.28467   1.32932  0.20782  1.370   0.1707    
+## smoking                                   0.08291   1.08644  0.23844  0.348   0.7281    
+## age_at_diagnosis                          0.01094   1.01100  0.01110  0.985   0.3244    
+## ajcc_pathologic_stage_combinedLate Stage  1.16110   3.19346  0.21542  5.390 7.05e-08 ***
+## MK2_Expression_topQ                      -0.75590   0.46959  0.32426 -2.331   0.0197 *  
+## KRAS.simp.21:MK2_Expression_topQ          0.47199   1.60318  0.52519  0.899   0.3688    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+##                                          exp(coef) exp(-coef) lower .95 upper .95
+## KRAS.simp.21                                1.3683     0.7308    0.8323    2.2495
+## gendermale                                  1.3293     0.7523    0.8846    1.9977
+## smoking                                     1.0864     0.9204    0.6808    1.7337
+## age_at_diagnosis                            1.0110     0.9891    0.9892    1.0332
+## ajcc_pathologic_stage_combinedLate Stage    3.1935     0.3131    2.0936    4.8711
+## MK2_Expression_topQ                         0.4696     2.1295    0.2487    0.8866
+## KRAS.simp.21:MK2_Expression_topQ            1.6032     0.6238    0.5727    4.4877
+## 
+## Concordance= 0.681  (se = 0.027 )
+## Likelihood ratio test= 40.9  on 7 df,   p=8e-07
+## Wald test            = 42.13  on 7 df,   p=5e-07
+## Score (logrank) test = 46.6  on 7 df,   p=7e-08
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+The R session information (including the OS info, R version and all
+packages used):
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{sessionInfo}\hlstd{()}
+\end{alltt}
+\begin{verbatim}
+## R version 4.0.3 (2020-10-10)
+## Platform: x86_64-w64-mingw32/x64 (64-bit)
+## Running under: Windows 10 x64 (build 19043)
+## 
+## Matrix products: default
+## 
+## locale:
+## [1] LC_COLLATE=English_United States.1252  LC_CTYPE=English_United States.1252   
+## [3] LC_MONETARY=English_United States.1252 LC_NUMERIC=C                          
+## [5] LC_TIME=English_United States.1252    
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+## [1] survival_3.2-7    dplyr_1.0.4       data.table_1.13.6 ggplot2_3.3.3    
+## 
+## loaded via a namespace (and not attached):
+##  [1] zoo_1.8-8        tidyselect_1.1.0 xfun_0.30        purrr_0.3.4      splines_4.0.3   
+##  [6] haven_2.4.3      lattice_0.20-41  carData_3.0-4    colorspace_2.0-0 vctrs_0.3.6     
+## [11] generics_0.1.2   mgcv_1.8-33      survMisc_0.5.5   rlang_0.4.10     ggpubr_0.4.0    
+## [16] pillar_1.4.7     withr_2.4.1      foreign_0.8-80   glue_1.4.2       DBI_1.1.1       
+## [21] readxl_1.3.1     lifecycle_0.2.0  stringr_1.4.0    munsell_0.5.0    ggsignif_0.6.0  
+## [26] gtable_0.3.0     cellranger_1.1.0 zip_2.1.1        evaluate_0.14    labeling_0.4.2  
+## [31] knitr_1.31       rio_0.5.16       forcats_0.5.1    curl_4.3         highr_0.8       
+## [36] broom_0.7.4      Rcpp_1.0.6       xtable_1.8-4     backports_1.2.1  scales_1.1.1    
+## [41] abind_1.4-5      farver_2.0.3     km.ci_0.5-2      gridExtra_2.3    digest_0.6.27   
+## [46] hms_1.0.0        stringi_1.5.3    openxlsx_4.2.3   rstatix_0.6.0    KMsurv_0.1-5    
+## [51] grid_4.0.3       cli_2.3.0        tools_4.0.3      magrittr_2.0.1   tibble_3.0.6    
+## [56] crayon_1.4.1     car_3.0-10       tidyr_1.1.2      pkgconfig_2.0.3  ellipsis_0.3.1  
+## [61] Matrix_1.2-18    survminer_0.4.8  assertthat_0.2.1 R6_2.5.0         nlme_3.1-152    
+## [66] compiler_4.0.3
+\end{verbatim}
+\begin{alltt}
+\hlkwd{Sys.time}\hlstd{()}
+\end{alltt}
+\begin{verbatim}
+## [1] "2022-08-25 09:57:14 EDT"
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+
+\end{document}
